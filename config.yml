@@ -1,0 +1,4 @@
+mongo:
+  url: mongodb+srv://gowthamRestNode:Iamgowtham!2@gps-pvbqa.mongodb.net/test?retryWrites=true
+  collections:
+    location_histories: location_histories
