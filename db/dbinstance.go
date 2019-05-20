@@ -2,9 +2,8 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"gitlab.com/gps2.0/config"
-	"gitlab.com/gps2.0/server"
+	"gitlab.com/gps2.0/errcheck"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"sync"
@@ -28,9 +27,7 @@ func GetMongoCollectionWithContext(collectionName string) (*mongo.Collection, co
 	mongoClient = getMongoClient()
 	collection := mongoClient.Database("gpsV2").Collection(collectionName)
 
-	ctx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
-
-	defer cancelFunc()
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
 	return collection, ctx
 }
@@ -38,17 +35,15 @@ func GetMongoCollectionWithContext(collectionName string) (*mongo.Collection, co
 func connectDBOfficial() {
 	appConfigInstance := config.GetAppConfig()
 
-	fmt.Println(appConfigInstance.Mongoconfig.URL)
-
 	mClient, err := mongo.NewClient(&options.ClientOptions{
 		Hosts: []string{appConfigInstance.Mongoconfig.URL},
 	})
 
-	server.CheckError(err)
+	errcheck.CheckError(err)
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = mClient.Connect(ctx)
 
-	server.CheckError(err)
+	errcheck.CheckError(err)
 	mongoClient = mClient
 }

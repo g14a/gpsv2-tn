@@ -1,4 +1,4 @@
 mongo:
-  url: mongodb+srv://gowthamRestNode:Iamgowtham!2@gps-pvbqa.mongodb.net/test?retryWrites=true
+  url: mongodb+srv://gowtham:Iamgowtham!2@gps-pvbqa.mongodb.net/readWriteAnyDatabase@admin?retryWrites=true
   collections:
     location_histories: location_histories

@@ -5,11 +5,14 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"gitlab.com/gps2.0/config"
+	"gitlab.com/gps2.0/db"
+	"gitlab.com/gps2.0/errcheck"
 	"gitlab.com/gps2.0/models"
 	"io"
-	"log"
 	"net"
 	"strings"
+	"sync"
 	"syscall"
 )
 
@@ -22,7 +25,11 @@ func HandleConnection(conn net.Conn) {
 		message := scanner.Text()
 		fmt.Println("Message received: ", message)
 
-		ParseGTPLData(message)
+		gtplDevice := ParseGTPLData(message)
+
+		fmt.Println(gtplDevice)
+		err := InsertGTPLDataIntoMongo(gtplDevice)
+		errcheck.CheckError(err)
 
 		go connCheckForShutdown(conn)
 	}
@@ -31,6 +38,11 @@ func HandleConnection(conn net.Conn) {
 		fmt.Println("error: ", err)
 	}
 }
+
+var (
+	locationHistoriesCollection = config.GetAppConfig().Mongoconfig.Collections.LocationHistoriesCollection
+	collectionMutex = &sync.Mutex{}
+)
 
 func connCheckForShutdown(c net.Conn) error {
 	var (
@@ -70,13 +82,13 @@ func connCheckForShutdown(c net.Conn) error {
 	}
 }
 
-func ParseGTPLData(rawData string) {
+func ParseGTPLData(rawData string) models.GTPLDevice {
 
 	r := csv.NewReader(strings.NewReader(rawData))
 
 	csvData, err := r.ReadAll()
 
-	CheckError(err)
+	errcheck.CheckError(err)
 
 	var gtplDevice models.GTPLDevice
 
@@ -100,11 +112,18 @@ func ParseGTPLData(rawData string) {
 		gtplDevice.AnalogVoltage = csvArray[17]
 	}
 
-	fmt.Println(gtplDevice)
+	return gtplDevice
 }
 
-func CheckError(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
+func InsertGTPLDataIntoMongo(gtplDevice models.GTPLDevice) error {
+	locationHistoriesCollection, ctx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
+
+	collectionMutex.Lock()
+
+	_, err := locationHistoriesCollection.InsertOne(ctx, gtplDevice)
+
+	collectionMutex.Unlock()
+	errcheck.CheckError(err)
+
+	return err
 }

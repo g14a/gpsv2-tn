@@ -28,4 +28,9 @@ type GTPLDevice struct {
 	Location string
 	PreLat string
 	PreLong string
+
+	// geofencing details
+	CurrentFenceID string
+	CurrentFenceExist bool
+	FenceIDsOfDevice []string
 }

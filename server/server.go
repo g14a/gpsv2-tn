@@ -2,19 +2,20 @@ package server
 
 import (
 	"fmt"
+	"gitlab.com/gps2.0/errcheck"
 	"net"
 )
 
 func StartServer() {
 	ln, err := net.Listen("tcp", "127.0.0.1:8000")
 
-	CheckError(err)
+	errcheck.CheckError(err)
 
 	fmt.Println("Accept Incoming connection")
 
 	for {
 		conn, err := ln.Accept()
-		CheckError(err)
+		errcheck.CheckError(err)
 
 		fmt.Println("New Client -- ", conn.RemoteAddr(), " --  connected..")
 		go HandleConnection(conn)
