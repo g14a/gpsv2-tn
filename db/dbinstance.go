@@ -35,9 +35,7 @@ func GetMongoCollectionWithContext(collectionName string) (*mongo.Collection, co
 func connectDBOfficial() {
 	appConfigInstance := config.GetAppConfig()
 
-	mClient, err := mongo.NewClient(&options.ClientOptions{
-		Hosts: []string{appConfigInstance.Mongoconfig.URL},
-	})
+	mClient, err := mongo.NewClient(options.Client().ApplyURI(appConfigInstance.Mongoconfig.URL))
 
 	errcheck.CheckError(err)
 
