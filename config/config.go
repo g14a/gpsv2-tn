@@ -11,4 +11,5 @@ type Mongoconfig struct {
 
 type MongoCollectionConfig struct {
 	LocationHistoriesCollection string `yaml:"location_histories"`
+	VehicleDetailsCollection string `yaml:"vehicle_details"`
 }

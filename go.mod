@@ -4,12 +4,8 @@ go 1.12
 
 require (
 	github.com/go-stack/stack v1.8.0 // indirect
-	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.3.0 // indirect
-	github.com/google/uuid v1.1.1 // indirect
-	github.com/kr/pretty v0.1.0
-	github.com/sergi/go-diff v1.0.0 // indirect
-	github.com/stretchr/testify v1.3.0 // indirect
+	github.com/hashicorp/vault/api v1.0.2
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65 // indirect
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
 	github.com/xdg/stringprep v1.0.0 // indirect
@@ -17,7 +13,5 @@ require (
 	golang.org/x/crypto v0.0.0-20190513172903-22d7a77e9e5f // indirect
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
 	golang.org/x/text v0.3.2 // indirect
-	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
-	googlemaps.github.io/maps v0.0.0-20190514133808-4d12cf0fa845
 	gopkg.in/yaml.v2 v2.2.2
 )

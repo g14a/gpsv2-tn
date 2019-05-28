@@ -24,7 +24,6 @@ type GTPLDevice struct {
 	IgnitionStatus string
 	AnalogVoltage string
 	InternalBTVoltage string
-	RawData string
 	Location string
 	PreLat string
 	PreLong string
@@ -33,4 +32,7 @@ type GTPLDevice struct {
 	CurrentFenceID string
 	CurrentFenceExist bool
 	FenceIDsOfDevice []string
+
+	// Latest record or not
+	LatestRecord bool
 }
