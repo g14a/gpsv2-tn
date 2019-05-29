@@ -2,12 +2,16 @@ package server
 
 import (
 	"fmt"
+	"gitlab.com/gps2.0/config"
 	"gitlab.com/gps2.0/errcheck"
 	"net"
 )
 
 func StartServer() {
-	ln, err := net.Listen("tcp", "127.0.0.1:8000")
+	appConfigInstance := config.GetAppConfig()
+	tcpAddress := appConfigInstance.TCPSocketConfig.ServerURL + ":" + appConfigInstance.TCPSocketConfig.Port
+
+	ln, err := net.Listen("tcp", tcpAddress)
 
 	errcheck.CheckError(err)
 

@@ -4,3 +4,7 @@ mongo:
     location_histories: location_histories
     vehicle_details: vehicle_details
 
+tcp:
+  serverURL: "127.0.0.1"
+  port: "8000"
+

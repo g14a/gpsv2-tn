@@ -25,5 +25,6 @@ func loadConfig() {
 	errcheck.CheckError(err)
 
 	err = yaml.Unmarshal(yamlFile, &appConfigInstance)
+
 	errcheck.CheckError(err)
 }
