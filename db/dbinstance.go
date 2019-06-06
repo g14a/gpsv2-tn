@@ -25,7 +25,7 @@ func getMongoClient() *mongo.Client {
 
 func GetMongoCollectionWithContext(collectionName string) (*mongo.Collection, context.Context) {
 	mongoClient = getMongoClient()
-	collection := mongoClient.Database("gpsV2").Collection(collectionName)
+	collection := mongoClient.Database("gpsgolang").Collection(collectionName)
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 

@@ -10,6 +10,7 @@ import (
 	"gitlab.com/gps2.0/errcheck"
 	"gitlab.com/gps2.0/models"
 	"go.mongodb.org/mongo-driver/bson"
+	options2 "go.mongodb.org/mongo-driver/mongo/options"
 	"io"
 	"net"
 	"strings"
@@ -138,10 +139,13 @@ func UpdateGTPLDataIntoMongo(gtpldevice *models.GTPLDevice) error {
 
 	vehicleDetailsCollection, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
 
-	count, err := vehicleDetailsCollection.CountDocuments(ctx, bson.M{"deviceid": gtpldevice.DeviceID})
-	fmt.Println("count == > ", count)
+	options := options2.FindOptions{}
+	limit := int64(1)
+	options.Limit = &limit
 
-	if count > 0 {
+	cursor, err := vehicleDetailsCollection.Find(ctx, bson.M{"deviceid": gtpldevice.DeviceID}, &options)
+
+	if cursor.Next(ctx) {
 
 		collectionMutex.Lock()
 

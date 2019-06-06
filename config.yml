@@ -1,5 +1,6 @@
 mongo:
-  url: mongodb+srv://chaitanya:fofx@munukutla-mongo-cluster-kt0qc.mongodb.net/readWriteAnyDatabase@admin?retryWrites=true
+#  url: mongodb+srv://chaitanya:fofx@munukutla-mongo-cluster-kt0qc.mongodb.net/readWriteAnyDatabase@admin?retryWrites=true
+  url: mongodb://206.189.137.125:27017
   collections:
     location_histories: location_histories
     vehicle_details: vehicle_details
