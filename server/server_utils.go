@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bufio"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -12,36 +11,40 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	options2 "go.mongodb.org/mongo-driver/mongo/options"
 	"io"
+	"log"
 	"net"
+	"os"
+	"os/signal"
 	"strings"
 	"sync"
 	"syscall"
 )
 
+var clients []net.Conn
+var count = 0
+
 func HandleConnection(conn net.Conn) {
-	defer conn.Close()
 
-	scanner := bufio.NewScanner(conn)
+	defer removeClient(conn)
+	errorChan := make(chan error)
+	dataChan := make(chan []byte)
 
-	for scanner.Scan() {
-		message := scanner.Text()
-		fmt.Println("Message received: ", message)
+	go readWrapper(conn, dataChan, errorChan)
+	go connCheckForShutdown(conn)
 
-		gtplDevice := ParseGTPLData(message)
+	for {
+		select {
+		case data := <-dataChan:
 
-		fmt.Println(gtplDevice)
+			log.Printf("[SERVER} Client %s sent: %s", conn.RemoteAddr(), string(data))
+			gtplDevice := ParseGTPLData(string(data))
 
-		err := InsertGTPLDataIntoMongo(&gtplDevice)
-		errcheck.CheckError(err)
+			fmt.Println(gtplDevice)
 
-		err = UpdateGTPLDataIntoMongo(&gtplDevice)
-		errcheck.CheckError(err)
-
-		go connCheckForShutdown(conn)
-	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Println("error: ", err)
+		case err := <-errorChan:
+			log.Println("[SERVER] An error occured:", err.Error())
+			return
+		}
 	}
 }
 
@@ -51,14 +54,14 @@ var (
 	collectionMutex = &sync.Mutex{}
 )
 
-func connCheckForShutdown(c net.Conn) error {
+func connCheckForShutdown(conn net.Conn) error {
 	var (
 		n    int
 		err  error
 		buff [1]byte
 	)
 
-	sconn, ok := c.(syscall.Conn)
+	sconn, ok := conn.(syscall.Conn)
 
 	if !ok {
 		return nil
@@ -103,7 +106,8 @@ func ParseGTPLData(rawData string) models.GTPLDevice {
 		gtplDevice.Header = csvArray[0]
 		gtplDevice.DeviceID = csvArray[1]
 		gtplDevice.GPSValidity = csvArray[2]
-		gtplDevice.CurrentDateAndTime = csvArray[3]
+		gtplDevice.DeviceDate = csvArray[3]
+		gtplDevice.DeviceTime = csvArray[4]
 		gtplDevice.Latitude = csvArray[5]
 		gtplDevice.LatitudeDirection = csvArray[6]
 		gtplDevice.Longitude = csvArray[7]
@@ -117,9 +121,44 @@ func ParseGTPLData(rawData string) models.GTPLDevice {
 		gtplDevice.MainBatteryStatus = csvArray[15]
 		gtplDevice.IgnitionStatus = csvArray[16]
 		gtplDevice.AnalogVoltage = csvArray[17]
+		gtplDevice.DeviceTimeNow = ConvertToUnixTS(gtplDevice.DeviceDate, gtplDevice.DeviceTime)
 	}
 
 	return gtplDevice
+}
+
+func readWrapper(conn net.Conn, dataChan chan []byte, errorChan chan error) {
+	for {
+		buf := make([]byte, 5*1024)
+		reqLen, err := conn.Read(buf)
+		if err != nil {
+			errorChan <- err
+			return
+		}
+		dataChan <- buf[:reqLen]
+	}
+}
+
+func signalHandler() {
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, os.Interrupt)
+	go func() {
+		for sig := range sigchan {
+			log.Printf("[SERVER] Closing due to Signal: %s", sig)
+			log.Printf("[SERVER] Graceful shutdown")
+
+			fmt.Println("Done.")
+			// Exit cleanly
+			os.Exit(0)
+		}
+	}()
+}
+
+func removeClient(conn net.Conn) {
+	log.Printf("[SERVER] Client %s disconnected", conn.RemoteAddr())
+	count--
+	conn.Close()
+	//remove client from clients here
 }
 
 func InsertGTPLDataIntoMongo(gtplDevice *models.GTPLDevice) error {

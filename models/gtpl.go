@@ -4,14 +4,15 @@ type GTPLDevice struct {
 	Header                      string
 	DeviceID                    string
 	GPSValidity                 string
-	CurrentDateAndTime          string
+	DeviceDate          		string
+	DeviceTime 					string
 	CurrentDateAndTimeFormatted string
 	CreatedAtTimestamp          int32
 	Latitude                    string
 	LatitudeDirection           string
 	Longitude                   string
 	LongitudeDirection          string
-	TimeNow                     string
+	DeviceTimeNow               string
 	TimeNowISO                  string
 	FormatTime                  string
 	Speed                       string
@@ -27,9 +28,5 @@ type GTPLDevice struct {
 	Location                    string
 	PreLat                      string
 	PreLong                     string
-
-	// geofencing details
-	CurrentFenceID    string
-	CurrentFenceExist bool
-	FenceIDsOfDevice  []string
 }
+

@@ -1,9 +1,9 @@
 package server
 
 import (
-	"fmt"
 	"gitlab.com/gps2.0/config"
 	"gitlab.com/gps2.0/errcheck"
+	"log"
 	"net"
 )
 
@@ -15,13 +15,22 @@ func StartServer() {
 
 	errcheck.CheckError(err)
 
-	fmt.Println("Accept Incoming connection")
+	defer ln.Close()
+	go signalHandler()
+
+	log.Println("[SERVER] listening...")
 
 	for {
 		conn, err := ln.Accept()
-		errcheck.CheckError(err)
+		count++
+		if err != nil {
+			log.Println(err)
+		}
 
-		fmt.Println("New Client -- ", conn.RemoteAddr(), " --  connected..")
+		log.Printf("[SERVER] Client connected %s -> %s -- Number of clients connected (%d)\n", conn.RemoteAddr(), conn.LocalAddr(), count)
+		// Add the client to the connection array
+		clients = append(clients, conn)
+
 		go HandleConnection(conn)
 	}
 }
