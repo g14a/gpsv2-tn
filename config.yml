@@ -6,6 +6,6 @@ mongo:
     vehicle_details: vehicle_details
 
 tcp:
-  serverURL: "127.0.0.1"
-  port: "8000"
+  serverURL: "139.59.3.14"
+  port: "7788"
 
