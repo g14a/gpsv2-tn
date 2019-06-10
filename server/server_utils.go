@@ -83,14 +83,20 @@ func readWrapper(conn net.Conn, wg *sync.WaitGroup) {
 		buf := make([]byte, 512)
 		_, err := conn.Read(buf)
 
-		errcheck.CheckError(err)
+		if err != nil {
+			if err == io.EOF {
+				fmt.Println("Connection closed EOF")
+				conn.Close()
+			}
+		} else {
+			dataSlice := strings.Split(string(buf), "#")
 
-		dataSlice := strings.Split(string(buf), "#")
-
-		fmt.Println("Client ", conn.RemoteAddr(), " sent : ")
-		for _, individualRecord := range dataSlice {
-			fmt.Println(individualRecord)
+			fmt.Println("Client ", conn.RemoteAddr(), " sent : ")
+			for _, individualRecord := range dataSlice {
+				fmt.Println(individualRecord)
+			}
 		}
+
 	}
 }
 
