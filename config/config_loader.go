@@ -1,7 +1,7 @@
 package config
 
 import (
-	"gitlab.com/gps2.0/errcheck"
+	"gitlab.com/gpsv2/errcheck"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"sync"

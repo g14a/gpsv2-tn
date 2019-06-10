@@ -2,8 +2,8 @@ package db
 
 import (
 	"context"
-	"gitlab.com/gps2.0/config"
-	"gitlab.com/gps2.0/errcheck"
+	"gitlab.com/gpsv2/config"
+	"gitlab.com/gpsv2/errcheck"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"sync"

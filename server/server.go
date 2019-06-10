@@ -1,11 +1,14 @@
 package server
 
 import (
-	"gitlab.com/gps2.0/config"
-	"gitlab.com/gps2.0/errcheck"
+	"gitlab.com/gpsv2/config"
+	"gitlab.com/gpsv2/errcheck"
 	"log"
 	"net"
 )
+
+var clients []net.Conn
+var count = 0
 
 func StartServer() {
 	appConfigInstance := config.GetAppConfig()
@@ -27,7 +30,6 @@ func StartServer() {
 			log.Println(err)
 		}
 
-		log.Printf("[SERVER] Client connected %s -> %s -- Number of clients connected (%d)\n", conn.RemoteAddr(), conn.LocalAddr(), count)
 		// Add the client to the connection array
 		clients = append(clients, conn)
 

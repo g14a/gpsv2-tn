@@ -1,6 +1,8 @@
 package main
 
-import "gitlab.com/gps2.0/server"
+import (
+	"gitlab.com/gpsv2/server"
+)
 
 func main() {
 	server.StartServer()

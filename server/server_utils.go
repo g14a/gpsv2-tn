@@ -3,10 +3,10 @@ package server
 import (
 	"errors"
 	"fmt"
-	"gitlab.com/gps2.0/config"
-	"gitlab.com/gps2.0/db"
-	"gitlab.com/gps2.0/errcheck"
-	"gitlab.com/gps2.0/models"
+	"gitlab.com/gpsv2/config"
+	"gitlab.com/gpsv2/db"
+	"gitlab.com/gpsv2/errcheck"
+	"gitlab.com/gpsv2/models"
 	"go.mongodb.org/mongo-driver/bson"
 	options2 "go.mongodb.org/mongo-driver/mongo/options"
 	"io"
@@ -14,35 +14,19 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 )
 
-var clients []net.Conn
-var count = 0
-
 func HandleConnection(conn net.Conn) {
 
-	errorChan := make(chan error)
-	dataChan := make(chan []byte)
+	var wg sync.WaitGroup
 
-	go readWrapper(conn, dataChan, errorChan)
-	go connCheckForShutdown(conn)
+	wg.Add(1)
+	go readWrapper(conn, &wg)
+	wg.Wait()
 
-	for {
-		select {
-		case data := <-dataChan:
-
-			log.Printf("[SERVER} Client %s sent: %s", conn.RemoteAddr(), string(data))
-			//gtplDevice := ParseGTPLData(string(data))
-			//
-			//fmt.Println(gtplDevice)
-
-		case err := <-errorChan:
-			log.Println("[SERVER] An error occured:", err.Error())
-			return
-		}
-	}
 }
 
 var (
@@ -89,15 +73,24 @@ func connCheckForShutdown(conn net.Conn) error {
 	}
 }
 
-func readWrapper(conn net.Conn, dataChan chan []byte, errorChan chan error) {
+func readWrapper(conn net.Conn, wg *sync.WaitGroup) {
+
+	fmt.Printf("\n[SERVER] Client connected %s -> %s -- Number of clients connected (%d)\n", conn.RemoteAddr(), conn.LocalAddr(), count)
+
+	defer wg.Done()
+
 	for {
-		buf := make([]byte, 5*1024)
-		reqLen, err := conn.Read(buf)
-		if err != nil {
-			errorChan <- err
-			return
+		buf := make([]byte, 512)
+		_, err := conn.Read(buf)
+
+		errcheck.CheckError(err)
+
+		dataSlice := strings.Split(string(buf), "#")
+
+		fmt.Println("Client ", conn.RemoteAddr(), " sent : ")
+		for _, individualRecord := range dataSlice {
+			fmt.Println(individualRecord)
 		}
-		dataChan <- buf[:reqLen]
 	}
 }
 
@@ -114,13 +107,6 @@ func signalHandler() {
 			os.Exit(0)
 		}
 	}()
-}
-
-func removeClient(conn net.Conn) {
-	log.Printf("[SERVER] Client %s disconnected", conn.RemoteAddr())
-	count--
-	conn.Close()
-	//remove client from clients here
 }
 
 func InsertGTPLDataIntoMongo(gtplDevice *models.GTPLDevice) error {

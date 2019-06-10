@@ -2,8 +2,8 @@ package server
 
 import (
 	"encoding/csv"
-	"gitlab.com/gps2.0/errcheck"
-	"gitlab.com/gps2.0/models"
+	"gitlab.com/gpsv2/errcheck"
+	"gitlab.com/gpsv2/models"
 	"strings"
 )
 

@@ -1,9 +1,10 @@
 # build stage
 FROM golang AS build-env
-ADD . /src
-RUN cd /src && GOOS=linux go build
+COPY . /src
+RUN cd /src && CGO_ENABLED=0 GOOS=linux go build -o gpsv2
 
+# final stage
 FROM alpine
 WORKDIR /app
-COPY --from=build-env /src/gps2.0 /app
-ENTRYPOINT ./gps2.0
+COPY --from=build-env /src/gpsv2 /app/
+CMD ["./gpsv2"]
