@@ -7,5 +7,5 @@ mongo:
 
 tcp:
   serverURL: "139.59.3.14"
-  port: "5588"
+  port: "8000"
 

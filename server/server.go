@@ -11,6 +11,7 @@ var clients []net.Conn
 var count = 0
 
 func StartServer() {
+
 	appConfigInstance := config.GetAppConfig()
 	tcpAddress := appConfigInstance.TCPSocketConfig.ServerURL + ":" + appConfigInstance.TCPSocketConfig.Port
 

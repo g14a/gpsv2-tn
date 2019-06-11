@@ -17,14 +17,17 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 )
 
 func HandleConnection(conn net.Conn) {
 
+	Ping := make(map[string]int)
+
 	var wg sync.WaitGroup
 
 	wg.Add(1)
-	go readWrapper(conn, &wg)
+	go readWrapper(conn, &wg, Ping)
 	wg.Wait()
 
 }
@@ -33,6 +36,7 @@ var (
 	locationHistoriesCollection = config.GetAppConfig().Mongoconfig.Collections.LocationHistoriesCollection
 	vehicleDetailsCollection    = config.GetAppConfig().Mongoconfig.Collections.VehicleDetailsCollection
 	collectionMutex             = &sync.Mutex{}
+	dataMutex = &sync.Mutex{}
 )
 
 func connCheckForShutdown(conn net.Conn) error {
@@ -73,14 +77,14 @@ func connCheckForShutdown(conn net.Conn) error {
 	}
 }
 
-func readWrapper(conn net.Conn, wg *sync.WaitGroup) {
+func readWrapper(conn net.Conn, wg *sync.WaitGroup, m map[string]int) {
 
 	fmt.Printf("\n[SERVER] Client connected %s -> %s -- Number of clients connected (%d)\n", conn.RemoteAddr(), conn.LocalAddr(), count)
 
 	defer wg.Done()
 
 	for {
-		buf := make([]byte, 512)
+		buf := make([]byte, 5*1024)
 		_, err := conn.Read(buf)
 
 		if err != nil {
@@ -89,14 +93,18 @@ func readWrapper(conn net.Conn, wg *sync.WaitGroup) {
 				conn.Close()
 			}
 		} else {
-			dataSlice := strings.Split(string(buf), "#")
+			dataMutex.Lock()
+			dataSlice := strings.Split(string(buf), "*")
 
-			fmt.Println("Client ", conn.RemoteAddr(), " sent : ")
 			for _, individualRecord := range dataSlice {
-				fmt.Println(individualRecord)
-			}
-		}
+				m[conn.RemoteAddr().String()] += len(dataSlice)
 
+				fmt.Println(individualRecord, conn.RemoteAddr().String())
+			}
+			fmt.Println(time.Now())
+			fmt.Println(m)
+			dataMutex.Unlock()
+		}
 	}
 }
 
@@ -115,21 +123,9 @@ func signalHandler() {
 	}()
 }
 
-func InsertGTPLDataIntoMongo(gtplDevice *models.GTPLDevice) error {
-	locationHistoriesCollection, ctx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
+func InsertGTPLDataIntoMongo(gtpldevice *models.GTPLDevice) error {
 
-	collectionMutex.Lock()
-
-	_, err := locationHistoriesCollection.InsertOne(ctx, gtplDevice)
-
-	collectionMutex.Unlock()
-	errcheck.CheckError(err)
-
-	return err
-}
-
-func UpdateGTPLDataIntoMongo(gtpldevice *models.GTPLDevice) error {
-
+	locationHistoriesCollection, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
 	vehicleDetailsCollection, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
 
 	options := options2.FindOptions{}
@@ -148,14 +144,16 @@ func UpdateGTPLDataIntoMongo(gtpldevice *models.GTPLDevice) error {
 		errcheck.CheckError(err)
 
 		return err
+
+	} else {
+
+		collectionMutex.Lock()
+
+		_, err = locationHistoriesCollection.InsertOne(locCtx, gtpldevice)
+
+		collectionMutex.Unlock()
+		errcheck.CheckError(err)
 	}
-
-	collectionMutex.Lock()
-
-	_, err = vehicleDetailsCollection.InsertOne(ctx, gtpldevice)
-
-	collectionMutex.Unlock()
-	errcheck.CheckError(err)
 
 	return err
 }
