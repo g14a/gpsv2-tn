@@ -99,7 +99,9 @@ func readWrapper(conn net.Conn, wg *sync.WaitGroup, m map[string]int) {
 				m[conn.RemoteAddr().String()] += len(dataSlice)
 
 				ais140Device := ParseAIS140Data(individualRecord)
-				fmt.Println(ais140Device)
+				err := InsertGTPLDataIntoMongo(&ais140Device)
+
+				errcheck.CheckError(err)
 			}
 
 			dataMutex.Unlock()
@@ -123,7 +125,7 @@ func signalHandler() {
 	}()
 }
 
-func InsertGTPLDataIntoMongo(gtpldevice *models.GTPLDevice) error {
+func InsertGTPLDataIntoMongo(ais140Device *models.AIS140Device) error {
 
 	locationHistoriesCollection, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
 	vehicleDetailsCollection, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
@@ -132,13 +134,13 @@ func InsertGTPLDataIntoMongo(gtpldevice *models.GTPLDevice) error {
 	limit := int64(1)
 	options.Limit = &limit
 
-	cursor, err := vehicleDetailsCollection.Find(ctx, bson.M{"deviceid": gtpldevice.DeviceID}, &options)
+	cursor, err := vehicleDetailsCollection.Find(ctx, bson.M{"deviceid": ais140Device.IMEINumber}, &options)
 
 	if cursor.Next(ctx) {
 
 		collectionMutex.Lock()
 
-		_, err = vehicleDetailsCollection.ReplaceOne(ctx, bson.M{"deviceid": gtpldevice.DeviceID}, &gtpldevice)
+		_, err = vehicleDetailsCollection.ReplaceOne(ctx, bson.M{"deviceid": ais140Device.IMEINumber}, &ais140Device)
 
 		collectionMutex.Unlock()
 		errcheck.CheckError(err)
@@ -149,7 +151,7 @@ func InsertGTPLDataIntoMongo(gtpldevice *models.GTPLDevice) error {
 
 		collectionMutex.Lock()
 
-		_, err = locationHistoriesCollection.InsertOne(locCtx, gtpldevice)
+		_, err = locationHistoriesCollection.InsertOne(locCtx, ais140Device)
 
 		collectionMutex.Unlock()
 		errcheck.CheckError(err)
