@@ -17,7 +17,6 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-	"time"
 )
 
 func HandleConnection(conn net.Conn) {
@@ -36,7 +35,7 @@ var (
 	locationHistoriesCollection = config.GetAppConfig().Mongoconfig.Collections.LocationHistoriesCollection
 	vehicleDetailsCollection    = config.GetAppConfig().Mongoconfig.Collections.VehicleDetailsCollection
 	collectionMutex             = &sync.Mutex{}
-	dataMutex = &sync.Mutex{}
+	dataMutex                   = &sync.Mutex{}
 )
 
 func connCheckForShutdown(conn net.Conn) error {
@@ -99,10 +98,10 @@ func readWrapper(conn net.Conn, wg *sync.WaitGroup, m map[string]int) {
 			for _, individualRecord := range dataSlice {
 				m[conn.RemoteAddr().String()] += len(dataSlice)
 
-				fmt.Println(individualRecord, conn.RemoteAddr().String())
+				ais140Device := ParseAIS140Data(individualRecord)
+				fmt.Println(ais140Device)
 			}
-			fmt.Println(time.Now())
-			fmt.Println(m)
+
 			dataMutex.Unlock()
 		}
 	}
@@ -117,6 +116,7 @@ func signalHandler() {
 			log.Printf("[SERVER] Graceful shutdown")
 
 			fmt.Println("Done.")
+
 			// Exit cleanly
 			os.Exit(0)
 		}

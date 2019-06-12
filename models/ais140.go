@@ -38,5 +38,6 @@ type AIS140Device struct {
 	SequenceNumber         string
 	CheckSum               string
 
-	// Done
+	// Custom fields
+	DeviceTime string
 }
