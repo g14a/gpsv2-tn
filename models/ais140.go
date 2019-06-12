@@ -7,7 +7,7 @@ type AIS140Device struct {
 	PacketType             string
 	PacketIdentification   string
 	LiveOrHistoryPacket    string
-	IMEINumber             int
+	IMEINumber             string
 	VehicleRegNumber       string
 	GPSFix                 string
 	DateInDDMMYYYY         string

@@ -28,7 +28,7 @@ func ParseAIS140Data(rawData string) models.AIS140Device {
 			ais140Device.PacketType = csvarray[4]
 			ais140Device.PacketIdentification = csvarray[5]
 			ais140Device.LiveOrHistoryPacket = csvarray[6]
-			ais140Device.IMEINumber, _ = strconv.Atoi(csvarray[7])
+			ais140Device.IMEINumber = csvarray[7]
 			ais140Device.VehicleRegNumber = csvarray[8]
 			ais140Device.GPSFix = csvarray[9]
 			ais140Device.DateInDDMMYYYY = csvarray[10]

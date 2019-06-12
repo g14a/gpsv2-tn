@@ -21,12 +21,10 @@ import (
 
 func HandleConnection(conn net.Conn) {
 
-	Ping := make(map[string]int)
-
 	var wg sync.WaitGroup
 
 	wg.Add(1)
-	go readWrapper(conn, &wg, Ping)
+	go readWrapper(conn, &wg)
 	wg.Wait()
 
 }
@@ -76,7 +74,7 @@ func connCheckForShutdown(conn net.Conn) error {
 	}
 }
 
-func readWrapper(conn net.Conn, wg *sync.WaitGroup, m map[string]int) {
+func readWrapper(conn net.Conn, wg *sync.WaitGroup) {
 
 	fmt.Printf("\n[SERVER] Client connected %s -> %s -- Number of clients connected (%d)\n", conn.RemoteAddr(), conn.LocalAddr(), count)
 
@@ -95,15 +93,17 @@ func readWrapper(conn net.Conn, wg *sync.WaitGroup, m map[string]int) {
 			dataMutex.Lock()
 			dataSlice := strings.Split(string(buf), "*")
 
-			for _, individualRecord := range dataSlice {
-				m[conn.RemoteAddr().String()] += len(dataSlice)
+			var ais140Device models.AIS140Device
 
-				ais140Device := ParseAIS140Data(individualRecord)
+			for _, individualRecord := range dataSlice {
+
+				fmt.Println(individualRecord)
+
+				ais140Device = ParseAIS140Data(individualRecord)
 				err := InsertGTPLDataIntoMongo(&ais140Device)
 
 				errcheck.CheckError(err)
 			}
-
 			dataMutex.Unlock()
 		}
 	}
@@ -112,6 +112,7 @@ func readWrapper(conn net.Conn, wg *sync.WaitGroup, m map[string]int) {
 func signalHandler() {
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, os.Interrupt)
+
 	go func() {
 		for sig := range sigchan {
 			log.Printf("[SERVER] Closing due to Signal: %s", sig)
@@ -123,6 +124,7 @@ func signalHandler() {
 			os.Exit(0)
 		}
 	}()
+
 }
 
 func InsertGTPLDataIntoMongo(ais140Device *models.AIS140Device) error {
@@ -134,16 +136,16 @@ func InsertGTPLDataIntoMongo(ais140Device *models.AIS140Device) error {
 	limit := int64(1)
 	options.Limit = &limit
 
-	cursor, err := vehicleDetailsCollection.Find(ctx, bson.M{"deviceid": ais140Device.IMEINumber}, &options)
+	cursor, err := vehicleDetailsCollection.Find(ctx, bson.M{"imeinumber": ais140Device.IMEINumber}, &options)
 
 	if cursor.Next(ctx) {
 
 		collectionMutex.Lock()
 
-		_, err = vehicleDetailsCollection.ReplaceOne(ctx, bson.M{"deviceid": ais140Device.IMEINumber}, &ais140Device)
+		_, err = vehicleDetailsCollection.ReplaceOne(ctx, bson.M{"imeinumber": ais140Device.IMEINumber}, &ais140Device)
+		errcheck.CheckError(err)
 
 		collectionMutex.Unlock()
-		errcheck.CheckError(err)
 
 		return err
 
@@ -152,9 +154,10 @@ func InsertGTPLDataIntoMongo(ais140Device *models.AIS140Device) error {
 		collectionMutex.Lock()
 
 		_, err = locationHistoriesCollection.InsertOne(locCtx, ais140Device)
+		errcheck.CheckError(err)
 
 		collectionMutex.Unlock()
-		errcheck.CheckError(err)
+
 	}
 
 	return err
