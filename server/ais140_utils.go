@@ -7,6 +7,7 @@ import (
 	"gitlab.com/gpsv2/utils"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func ParseAIS140Data(rawData string) models.AIS140Device {
@@ -52,7 +53,8 @@ func ParseAIS140Data(rawData string) models.AIS140Device {
 			ais140Device.DigitalOutputStatus = csvarray[35]
 
 			//Custom fields
-			ais140Device.DeviceTime = utils.ConverttoUnixTS(ais140Device.DateInDDMMYYYY, ais140Device.TimeInHHMMSS)
+			ais140Device.DeviceTime = utils.ConvertToUnixTS(ais140Device.DateInDDMMYYYY, ais140Device.TimeInHHMMSS)
+			ais140Device.InsertedTimeStamp = time.Now()
 		}
 	}
 

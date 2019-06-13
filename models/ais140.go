@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type AIS140Device struct {
 	Header                 string
 	VendorIdentification   string
@@ -39,5 +41,6 @@ type AIS140Device struct {
 	CheckSum               string
 
 	// Custom fields
-	DeviceTime string
+	DeviceTime        time.Time
+	InsertedTimeStamp time.Time
 }
