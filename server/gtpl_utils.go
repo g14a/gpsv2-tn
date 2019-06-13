@@ -37,7 +37,7 @@ func ParseGTPLData(rawData string) models.GTPLDevice {
 			gtplDevice.MainBatteryStatus = csvArray[15]
 			gtplDevice.IgnitionStatus = csvArray[16]
 			gtplDevice.AnalogVoltage = csvArray[17]
-			gtplDevice.DeviceTimeNow = utils.ConverttoUnixTS(gtplDevice.DeviceDate, gtplDevice.DeviceTime)
+			gtplDevice.DeviceTimeNow = utils.ConvertToUnixTS(gtplDevice.DeviceDate, gtplDevice.DeviceTime)
 		}
 	}
 
