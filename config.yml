@@ -1,6 +1,12 @@
 mongo:
-  url: mongodb://206.189.137.125:27017
+  url: mongodb://139.59.3.14:27017
   collections:
+    location_histories: location_histories
+    vehicle_details: vehicle_details
+
+mongohistory:
+  backupurl: mongodb://206.189.137.125:27017
+  backupcollections:
     location_histories: location_histories
     vehicle_details: vehicle_details
 

@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	mongoClient *mongo.Client
-	once        sync.Once
+	mongoClient        *mongo.Client
+	historyMongoClient *mongo.Client
+	once               sync.Once
 )
 
 func getMongoClient() *mongo.Client {
@@ -32,16 +33,34 @@ func GetMongoCollectionWithContext(collectionName string) (*mongo.Collection, co
 	return collection, ctx
 }
 
+func GetHistoryCollectionsWithContext(collectionName string) (*mongo.Collection, context.Context) {
+	historyMongoClient = getMongoClient()
+	collection := historyMongoClient.Database("gpsgolang").Collection(collectionName)
+
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	return collection, ctx
+}
+
 func connectDBOfficial() {
 	appConfigInstance := config.GetAppConfig()
 
 	mClient, err := mongo.NewClient(options.Client().ApplyURI(appConfigInstance.Mongoconfig.URL))
+	historyClient, err := mongo.NewClient(options.Client().ApplyURI(appConfigInstance.HistoryMongoConfig.BackupURL))
 
 	errcheck.CheckError(err)
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	err = mClient.Connect(ctx)
 
+	// connect to live db
+	err = mClient.Connect(ctx)
 	errcheck.CheckError(err)
+
+	// connect to history db
+	err = historyClient.Connect(ctx)
+	errcheck.CheckError(err)
+
 	mongoClient = mClient
+	historyMongoClient = historyClient
+
 }

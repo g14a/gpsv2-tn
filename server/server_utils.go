@@ -7,7 +7,6 @@ import (
 	"gitlab.com/gpsv2/db"
 	"gitlab.com/gpsv2/errcheck"
 	"gitlab.com/gpsv2/models"
-	"go.mongodb.org/mongo-driver/bson"
 	options2 "go.mongodb.org/mongo-driver/mongo/options"
 	"io"
 	"log"
@@ -17,6 +16,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 )
 
 func HandleConnection(conn net.Conn) {
@@ -32,8 +32,13 @@ func HandleConnection(conn net.Conn) {
 var (
 	locationHistoriesCollection = config.GetAppConfig().Mongoconfig.Collections.LocationHistoriesCollection
 	vehicleDetailsCollection    = config.GetAppConfig().Mongoconfig.Collections.VehicleDetailsCollection
-	collectionMutex             = &sync.Mutex{}
-	dataMutex                   = &sync.Mutex{}
+
+	// backups collections
+	historyLHcollection = config.GetAppConfig().HistoryMongoConfig.BackupCollections.BackupLocationHistoriesColl
+	historyVDCollection = config.GetAppConfig().HistoryMongoConfig.BackupCollections.BackupVehicleDetailsColl
+
+	collectionMutex = &sync.Mutex{}
+	dataMutex       = &sync.Mutex{}
 )
 
 func connCheckForShutdown(conn net.Conn) error {
@@ -100,11 +105,17 @@ func readWrapper(conn net.Conn, wg *sync.WaitGroup) {
 				fmt.Println(individualRecord)
 
 				ais140Device = ParseAIS140Data(individualRecord)
-				err := InsertGTPLDataIntoMongo(&ais140Device)
 
-				errcheck.CheckError(err)
+				if ais140Device.LiveOrHistoryPacket == "L" || (ais140Device.LiveOrHistoryPacket == "H" && ais140Device.DeviceTime.Day() == time.Now().Day()) {
+					err = InsertGTPLDataIntoMongo(&ais140Device)
+					errcheck.CheckError(err)
+				} else {
+					err = InsertHistoryDataMongo(&ais140Device)
+					errcheck.CheckError(err)
+				}
 			}
 			dataMutex.Unlock()
+
 		}
 	}
 }
@@ -124,41 +135,35 @@ func signalHandler() {
 			os.Exit(0)
 		}
 	}()
-
 }
 
 func InsertGTPLDataIntoMongo(ais140Device *models.AIS140Device) error {
 
 	locationHistoriesCollection, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
-	vehicleDetailsCollection, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
+	//vehicleDetailsCollection, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
 
 	options := options2.FindOptions{}
 	limit := int64(1)
 	options.Limit = &limit
 
-	cursor, err := vehicleDetailsCollection.Find(ctx, bson.M{"imeinumber": ais140Device.IMEINumber}, &options)
+	collectionMutex.Lock()
 
-	if cursor.Next(ctx) {
+	_, err := locationHistoriesCollection.InsertOne(locCtx, ais140Device)
+	errcheck.CheckError(err)
 
-		collectionMutex.Lock()
+	collectionMutex.Unlock()
 
-		_, err = vehicleDetailsCollection.ReplaceOne(ctx, bson.M{"imeinumber": ais140Device.IMEINumber}, &ais140Device)
-		errcheck.CheckError(err)
+	return err
+}
 
-		collectionMutex.Unlock()
+func InsertHistoryDataMongo(ais140device *models.AIS140Device) error {
+	historyLHcollection, hctx := db.GetHistoryCollectionsWithContext(historyLHcollection)
 
-		return err
+	collectionMutex.Lock()
+	_, err := historyLHcollection.InsertOne(hctx, ais140device)
+	errcheck.CheckError(err)
 
-	} else {
-
-		collectionMutex.Lock()
-
-		_, err = locationHistoriesCollection.InsertOne(locCtx, ais140Device)
-		errcheck.CheckError(err)
-
-		collectionMutex.Unlock()
-
-	}
+	collectionMutex.Unlock()
 
 	return err
 }
