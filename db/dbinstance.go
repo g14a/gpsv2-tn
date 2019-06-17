@@ -41,7 +41,6 @@ func GetMongoCollectionWithContext(collectionName string) (*mongo.Collection, co
 	return collection, ctx
 }
 
-
 func GetHistoryCollectionsWithContext(collectionName string) (*mongo.Collection, context.Context) {
 	historyMongoClient = getHistoryMongoClient()
 	collection := historyMongoClient.Database("gpsgolang").Collection(collectionName)
