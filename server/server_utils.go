@@ -93,28 +93,52 @@ func readWrapper(conn net.Conn, wg *sync.WaitGroup) {
 		if err != nil {
 			if err == io.EOF {
 				fmt.Println("Connection closed EOF")
-				conn.Close()
+				_ = conn.Close()
 			}
 		} else {
 			dataMutex.Lock()
-			dataSlice := strings.Split(string(buf), "*")
 
-			var ais140Device models.AIS140Device
+			if strings.Contains(string(buf), "GTPL") {
+				dataSlice := strings.Split(string(buf), "#")
 
-			for _, individualRecord := range dataSlice {
+				var gtplDevice models.GTPLDevice
 
-				fmt.Println(individualRecord)
+				for _, individualRecord := range dataSlice {
 
-				err = InsertRawDataMongo(individualRecord)
+					err = InsertRawDataMongo(individualRecord)
 
-				ais140Device = ParseAIS140Data(individualRecord)
-				if ais140Device.LiveOrHistoryPacket == "L" || (ais140Device.LiveOrHistoryPacket == "H" && ais140Device.DeviceTime.Day() == time.Now().Day()) {
-					err = InsertGTPLDataIntoMongo(&ais140Device)
-					errcheck.CheckError(err)
-				} else {
-					fmt.Println("Condition is true")
-					err = InsertHistoryDataMongo(&ais140Device)
-					errcheck.CheckError(err)
+					gtplDevice = ParseGTPLData(individualRecord)
+
+					fmt.Println("Device : ", gtplDevice.DeviceTimeNow)
+					fmt.Println("Today's : ", time.Now())
+
+					if gtplDevice.DeviceTimeNow.Day() == time.Now().Day() {
+						err = InsertGTPLDataMongo(&gtplDevice)
+						errcheck.CheckError(err)
+					} else {
+						err = InsertGTPLHistoryDataMongo(&gtplDevice)
+						errcheck.CheckError(err)
+					}
+				}
+			} else if strings.Contains(string(buf), "AVA") {
+
+				dataSlice := strings.Split(string(buf), "*")
+
+				var ais140Device models.AIS140Device
+
+				for _, individualRecord := range dataSlice {
+
+					err = InsertRawDataMongo(individualRecord)
+
+					ais140Device = ParseAIS140Data(individualRecord)
+
+					if ais140Device.LiveOrHistoryPacket == "L" || (ais140Device.LiveOrHistoryPacket == "H" && ais140Device.DeviceTime.Day() == time.Now().Day()) {
+						err = InsertAIS140DataIntoMongo(&ais140Device)
+						errcheck.CheckError(err)
+					} else {
+						err = InsertAIS140HistoryDataMongo(&ais140Device)
+						errcheck.CheckError(err)
+					}
 				}
 			}
 			dataMutex.Unlock()
@@ -139,7 +163,7 @@ func signalHandler() {
 	}()
 }
 
-func InsertGTPLDataIntoMongo(ais140Device *models.AIS140Device) error {
+func InsertAIS140DataIntoMongo(ais140Device *models.AIS140Device) error {
 
 	locationHistoriesCollection, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
 	//vehicleDetailsCollection, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
@@ -158,12 +182,44 @@ func InsertGTPLDataIntoMongo(ais140Device *models.AIS140Device) error {
 	return err
 }
 
-func InsertHistoryDataMongo(ais140device *models.AIS140Device) error {
-	fmt.Println("inside this")
+func InsertAIS140HistoryDataMongo(ais140device *models.AIS140Device) error {
+
 	historyLHcollection, hctx := db.GetHistoryCollectionsWithContext(historyLHcollection)
 
 	collectionMutex.Lock()
 	_, err := historyLHcollection.InsertOne(hctx, ais140device)
+	errcheck.CheckError(err)
+
+	collectionMutex.Unlock()
+
+	return err
+}
+
+func InsertGTPLDataMongo(gtplDevice *models.GTPLDevice) error {
+
+	locationHistoriesCollection, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
+	//vehicleDetailsCollection, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
+
+	options := options2.FindOptions{}
+	limit := int64(1)
+	options.Limit = &limit
+
+	collectionMutex.Lock()
+
+	_, err := locationHistoriesCollection.InsertOne(locCtx, gtplDevice)
+	errcheck.CheckError(err)
+
+	collectionMutex.Unlock()
+
+	return err
+}
+
+func InsertGTPLHistoryDataMongo(gtplDevice *models.GTPLDevice) error {
+	fmt.Println("inside this")
+	historyLHcollection, hctx := db.GetHistoryCollectionsWithContext(historyLHcollection)
+
+	collectionMutex.Lock()
+	_, err := historyLHcollection.InsertOne(hctx, gtplDevice)
 	errcheck.CheckError(err)
 
 	collectionMutex.Unlock()
