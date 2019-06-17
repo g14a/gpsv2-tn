@@ -19,6 +19,7 @@ import (
 	"time"
 )
 
+
 func HandleConnection(conn net.Conn) {
 
 	var wg sync.WaitGroup
@@ -36,6 +37,7 @@ var (
 	// backups collections
 	historyLHcollection = config.GetAppConfig().HistoryMongoConfig.BackupCollections.BackupLocationHistoriesColl
 	historyVDCollection = config.GetAppConfig().HistoryMongoConfig.BackupCollections.BackupVehicleDetailsColl
+	rawDataCollection = config.GetAppConfig().HistoryMongoConfig.BackupCollections.RawDataCollection
 
 	collectionMutex = &sync.Mutex{}
 	dataMutex       = &sync.Mutex{}
@@ -103,6 +105,7 @@ func readWrapper(conn net.Conn, wg *sync.WaitGroup) {
 			for _, individualRecord := range dataSlice {
 
 				fmt.Println(individualRecord)
+				err = InsertRawDataMongo(individualRecord)
 
 				ais140Device = ParseAIS140Data(individualRecord)
 
@@ -110,6 +113,7 @@ func readWrapper(conn net.Conn, wg *sync.WaitGroup) {
 					err = InsertGTPLDataIntoMongo(&ais140Device)
 					errcheck.CheckError(err)
 				} else {
+					fmt.Println("Condition is true")
 					err = InsertHistoryDataMongo(&ais140Device)
 					errcheck.CheckError(err)
 				}
@@ -157,6 +161,7 @@ func InsertGTPLDataIntoMongo(ais140Device *models.AIS140Device) error {
 }
 
 func InsertHistoryDataMongo(ais140device *models.AIS140Device) error {
+	fmt.Println("inside this")
 	historyLHcollection, hctx := db.GetHistoryCollectionsWithContext(historyLHcollection)
 
 	collectionMutex.Lock()
@@ -167,3 +172,20 @@ func InsertHistoryDataMongo(ais140device *models.AIS140Device) error {
 
 	return err
 }
+
+func InsertRawDataMongo(rawData string) error {
+	rawDataCollection, rctx := db.GetHistoryCollectionsWithContext(rawDataCollection)
+
+	rd := &models.RawData{
+		RawData: rawData,
+	}
+
+	collectionMutex.Lock()
+	_, err := rawDataCollection.InsertOne(rctx, rd)
+	errcheck.CheckError(err)
+
+	collectionMutex.Unlock()
+
+	return err
+}
+

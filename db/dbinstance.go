@@ -24,6 +24,14 @@ func getMongoClient() *mongo.Client {
 	return mongoClient
 }
 
+func getHistoryMongoClient() *mongo.Client {
+	once.Do(func() {
+		connectDBOfficial()
+	})
+
+	return historyMongoClient
+}
+
 func GetMongoCollectionWithContext(collectionName string) (*mongo.Collection, context.Context) {
 	mongoClient = getMongoClient()
 	collection := mongoClient.Database("gpsgolang").Collection(collectionName)
@@ -33,8 +41,9 @@ func GetMongoCollectionWithContext(collectionName string) (*mongo.Collection, co
 	return collection, ctx
 }
 
+
 func GetHistoryCollectionsWithContext(collectionName string) (*mongo.Collection, context.Context) {
-	historyMongoClient = getMongoClient()
+	historyMongoClient = getHistoryMongoClient()
 	collection := historyMongoClient.Database("gpsgolang").Collection(collectionName)
 
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
