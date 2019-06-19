@@ -24,6 +24,16 @@ func getMongoClient() *mongo.Client {
 	return mongoClient
 }
 
+func GetSessionFromClient() (mongo.Session, error) {
+	once.Do(func() {
+		connectDBOfficial()
+	})
+
+	session, err := mongoClient.StartSession()
+
+	return session, err
+}
+
 func getHistoryMongoClient() *mongo.Client {
 	once.Do(func() {
 		connectDBOfficial()
