@@ -5,6 +5,7 @@ import (
 	"gitlab.com/gpsv2/errcheck"
 	"gitlab.com/gpsv2/models"
 	"gitlab.com/gpsv2/utils"
+	"strconv"
 	"strings"
 )
 
@@ -24,9 +25,9 @@ func ParseGTPLData(rawData string) models.GTPLDevice {
 			gtplDevice.GPSValidity = csvArray[2]
 			gtplDevice.DeviceDate = csvArray[3]
 			gtplDevice.DeviceTime = csvArray[4]
-			gtplDevice.Latitude = csvArray[5]
+			gtplDevice.Latitude, _ = strconv.ParseFloat(csvArray[5], 10)
 			gtplDevice.LatitudeDirection = csvArray[6]
-			gtplDevice.Longitude = csvArray[7]
+			gtplDevice.Longitude, _ = strconv.ParseFloat(csvArray[7], 10)
 			gtplDevice.LongitudeDirection = csvArray[8]
 			gtplDevice.Speed = csvArray[9]
 			gtplDevice.GPSOdometer = csvArray[10]

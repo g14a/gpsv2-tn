@@ -7,6 +7,7 @@ import (
 	"gitlab.com/gpsv2/db"
 	"gitlab.com/gpsv2/errcheck"
 	"gitlab.com/gpsv2/models"
+	"go.mongodb.org/mongo-driver/bson"
 	options2 "go.mongodb.org/mongo-driver/mongo/options"
 	"io"
 	"log"
@@ -35,7 +36,6 @@ var (
 
 	// backups collections
 	historyLHcollection = config.GetAppConfig().HistoryMongoConfig.BackupCollections.BackupLocationHistoriesColl
-	historyVDCollection = config.GetAppConfig().HistoryMongoConfig.BackupCollections.BackupVehicleDetailsColl
 	rawDataCollection   = config.GetAppConfig().HistoryMongoConfig.BackupCollections.RawDataCollection
 
 	collectionMutex = &sync.Mutex{}
@@ -106,11 +106,9 @@ func readWrapper(conn net.Conn, wg *sync.WaitGroup) {
 				for _, individualRecord := range dataSlice {
 
 					err = InsertRawDataMongo(individualRecord)
+					fmt.Println(individualRecord)
 
 					gtplDevice = ParseGTPLData(individualRecord)
-
-					fmt.Println("Device : ", gtplDevice.DeviceTimeNow)
-					fmt.Println("Today's : ", time.Now())
 
 					if gtplDevice.DeviceTimeNow.Day() == time.Now().Day() {
 						err = InsertGTPLDataMongo(&gtplDevice)
@@ -129,7 +127,7 @@ func readWrapper(conn net.Conn, wg *sync.WaitGroup) {
 				for _, individualRecord := range dataSlice {
 
 					err = InsertRawDataMongo(individualRecord)
-
+					fmt.Println(individualRecord)
 					ais140Device = ParseAIS140Data(individualRecord)
 
 					if ais140Device.LiveOrHistoryPacket == "L" || (ais140Device.LiveOrHistoryPacket == "H" && ais140Device.DeviceTime.Day() == time.Now().Day()) {
@@ -198,7 +196,7 @@ func InsertAIS140HistoryDataMongo(ais140device *models.AIS140Device) error {
 func InsertGTPLDataMongo(gtplDevice *models.GTPLDevice) error {
 
 	locationHistoriesCollection, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
-	//vehicleDetailsCollection, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
+	vehicleDetailsCollection, vctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
 
 	options := options2.FindOptions{}
 	limit := int64(1)
@@ -206,16 +204,26 @@ func InsertGTPLDataMongo(gtplDevice *models.GTPLDevice) error {
 
 	collectionMutex.Lock()
 
-	_, err := locationHistoriesCollection.InsertOne(locCtx, gtplDevice)
+	cursor, err := vehicleDetailsCollection.Find(vctx, bson.M{"deviceid": gtplDevice.DeviceID}, &options)
+
 	errcheck.CheckError(err)
 
+	if cursor.Next(vctx) {
+		_, err := vehicleDetailsCollection.ReplaceOne(vctx, bson.M{"deviceid": gtplDevice.DeviceID}, gtplDevice)
+		errcheck.CheckError(err)
+
+	} else {
+		_, err = vehicleDetailsCollection.InsertOne(vctx, gtplDevice)
+		errcheck.CheckError(err)
+	}
+
+	_, err = locationHistoriesCollection.InsertOne(locCtx, gtplDevice)
 	collectionMutex.Unlock()
 
 	return err
 }
 
 func InsertGTPLHistoryDataMongo(gtplDevice *models.GTPLDevice) error {
-	fmt.Println("inside this")
 	historyLHcollection, hctx := db.GetHistoryCollectionsWithContext(historyLHcollection)
 
 	collectionMutex.Lock()

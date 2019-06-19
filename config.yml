@@ -8,10 +8,8 @@ mongohistory:
   backupurl: mongodb://206.189.137.125:27017
   backupcollections:
     location_histories: location_histories
-    vehicle_details: vehicle_details
     raw_data: raw_data
 
 tcp:
   serverURL: "139.59.3.14"
   port: "5588"
-

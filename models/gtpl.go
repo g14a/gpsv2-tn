@@ -10,9 +10,9 @@ type GTPLDevice struct {
 	DeviceTime                  string
 	CurrentDateAndTimeFormatted string
 	CreatedAtTimestamp          int32
-	Latitude                    string
+	Latitude                    float64
 	LatitudeDirection           string
-	Longitude                   string
+	Longitude                   float64
 	LongitudeDirection          string
 	DeviceTimeNow               time.Time
 	TimeNowISO                  string
@@ -30,4 +30,7 @@ type GTPLDevice struct {
 	Location                    string
 	PreLat                      string
 	PreLong                     string
+
+	//
+	Distance int
 }

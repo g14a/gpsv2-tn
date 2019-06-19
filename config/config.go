@@ -23,8 +23,7 @@ type BackupMongoConfig struct {
 
 type MongoHistoryCollectionConfig struct {
 	BackupLocationHistoriesColl string `yaml:"location_histories"`
-	BackupVehicleDetailsColl    string `yaml:"vehicle_details"`
-	RawDataCollection string `yaml:"raw_data"`
+	RawDataCollection           string `yaml:"raw_data"`
 }
 
 type TCPSocketConfig struct {

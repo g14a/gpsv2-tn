@@ -43,4 +43,5 @@ type AIS140Device struct {
 	// Custom fields
 	DeviceTime        time.Time
 	InsertedTimeStamp time.Time
+	Distance          int
 }
