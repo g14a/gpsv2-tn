@@ -3,7 +3,7 @@ package models
 
 import "time"
 
-// The GTPLDevice is a model of a GTPL device
+// The GTPLDevice is a model of a GTPL device.
 type GTPLDevice struct {
 	Header                      string
 	DeviceID                    string
