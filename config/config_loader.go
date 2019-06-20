@@ -20,7 +20,7 @@ func GetAppConfig() *AppConfig {
 }
 
 // loadConfig loads the data in the yaml file into a struct
-// returns the app instance once if it is ready.
+// returns the app instance once if it is ready
 func loadConfig() {
 	yamlFile, err := ioutil.ReadFile("config.yml")
 

@@ -16,7 +16,7 @@ var (
 	once               sync.Once
 )
 
-// getMongoClient returns the client.
+// getMongoClient returns the client
 func getMongoClient() *mongo.Client {
 	once.Do(func() {
 		connectDBOfficial()
@@ -35,7 +35,7 @@ func GetSessionFromClient() (mongo.Session, error) {
 	return session, err
 }
 
-// getHistoryMongoClient returns the history db client.
+// getHistoryMongoClient returns the history db client
 func getHistoryMongoClient() *mongo.Client {
 	once.Do(func() {
 		connectDBOfficial()
@@ -45,7 +45,7 @@ func getHistoryMongoClient() *mongo.Client {
 }
 
 // GetMongoCollectionWithContext is mostly used by other functions
-// to insert data into the collection which this function returns.
+// to insert data into the collection which this function returns
 func GetMongoCollectionWithContext(collectionName string) (*mongo.Collection, context.Context) {
 	mongoClient = getMongoClient()
 	collection := mongoClient.Database("gpsgolang").Collection(collectionName)
