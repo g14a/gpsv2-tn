@@ -1,3 +1,5 @@
+// Package server provides the functionality of parsing
+// of AIS140 raw data into a AIS140 device model
 package server
 
 import (
@@ -10,6 +12,8 @@ import (
 	"time"
 )
 
+// ParseAIS140Data parses the raw data sent
+// by the AIS140 device and marshals into a AIS140 device model.
 func ParseAIS140Data(rawData string) models.AIS140Device {
 
 	r := csv.NewReader(strings.NewReader(rawData))

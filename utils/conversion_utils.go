@@ -5,7 +5,8 @@ import (
 	"time"
 )
 
-// For GTPL 170319,183004
+// ConvertToUnixTS converts time sent by the device(either AIS140 or GTPL)
+// to a UNIX timestamp. Do not tamper this. Timezone manipulation is complex.
 func ConvertToUnixTS(rawDate, rawTime string) time.Time {
 
 	amPm := "am"
@@ -30,6 +31,8 @@ func ConvertToUnixTS(rawDate, rawTime string) time.Time {
 
 }
 
+// monthsMap is a map which maps indexes of the months of a year
+// to its English representation.
 var monthsMap = map[string]string{
 	"01": "Jan",
 	"02": "Feb",
@@ -44,23 +47,3 @@ var monthsMap = map[string]string{
 	"11": "Nov",
 	"12": "Dec",
 }
-
-/*
-ts
-speed
-gsm strength
-ign stat
-device id
-external battery
-internal 11
-satellite count
-fuel
-sos alert
-tamper alert
-reg no
-company id , proj id
-device time
-lat long
-live history
-
-*/

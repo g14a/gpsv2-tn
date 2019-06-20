@@ -16,6 +16,7 @@ var (
 	once               sync.Once
 )
 
+// getMongoClient returns the client.
 func getMongoClient() *mongo.Client {
 	once.Do(func() {
 		connectDBOfficial()
@@ -34,6 +35,7 @@ func GetSessionFromClient() (mongo.Session, error) {
 	return session, err
 }
 
+// getHistoryMongoClient returns the history db client.
 func getHistoryMongoClient() *mongo.Client {
 	once.Do(func() {
 		connectDBOfficial()
@@ -42,6 +44,8 @@ func getHistoryMongoClient() *mongo.Client {
 	return historyMongoClient
 }
 
+// GetMongoCollectionWithContext is mostly used by other functions
+// to insert data into the collection which this function returns.
 func GetMongoCollectionWithContext(collectionName string) (*mongo.Collection, context.Context) {
 	mongoClient = getMongoClient()
 	collection := mongoClient.Database("gpsgolang").Collection(collectionName)
@@ -60,6 +64,8 @@ func GetHistoryCollectionsWithContext(collectionName string) (*mongo.Collection,
 	return collection, ctx
 }
 
+// connectDBOfficial connects to the Mongo db and assigns a Mongo client
+// using the db url mentioned in the config file.
 func connectDBOfficial() {
 	appConfigInstance := config.GetAppConfig()
 
@@ -68,6 +74,7 @@ func connectDBOfficial() {
 
 	errcheck.CheckError(err)
 
+	// Pings the database for a max of 10 seconds. Afterwards it gives an error.
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
 	// connect to live db
