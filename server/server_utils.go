@@ -120,7 +120,7 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 	}
 }
 
-// SignalHandler notices termination signals or
+// signalHandler notices termination signals or
 // interrupts from the command line. Eg: ctrl-c and exits cleanly
 func signalHandler() {
 	sigchan := make(chan os.Signal, 1)
