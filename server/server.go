@@ -1,5 +1,3 @@
-// Package server provides the functionality of parsing
-// of AIS140 raw data into a AIS140 device model
 package server
 
 import (
