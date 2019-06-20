@@ -3,7 +3,7 @@ package models
 import "time"
 
 // AIS140Device is a model of an AIS140 device
-// and contains the following fields.
+// and contains the following fields
 type AIS140Device struct {
 	Header                 string
 	VendorIdentification   string

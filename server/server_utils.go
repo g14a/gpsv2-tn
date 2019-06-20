@@ -41,7 +41,7 @@ var (
 )
 
 // readTCPClient reads data sent by the device(a TCP client)
-// and pushes it to the DB in an overview. Read more documentation below.
+// and pushes it to the DB in an overview. Read more documentation below
 func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 
 	fmt.Printf("\n[SERVER] Client connected %s -> %s -- Number of clients connected (%d)\n", conn.RemoteAddr(), conn.LocalAddr(), count)
@@ -121,7 +121,7 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 }
 
 // SignalHandler notices termination signals or
-// interrupts from the command line. Eg: ctrl-c and exits cleanly.
+// interrupts from the command line. Eg: ctrl-c and exits cleanly
 func signalHandler() {
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, os.Interrupt)

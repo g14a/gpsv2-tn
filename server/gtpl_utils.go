@@ -10,7 +10,7 @@ import (
 )
 
 // ParseGTPLData parses the raw data sent
-// by the GTPL device and marshals into a GTPL device model.
+// by the GTPL device and marshals into a GTPL device model
 func ParseGTPLData(rawData string) models.GTPLDevice {
 
 	r := csv.NewReader(strings.NewReader(rawData))

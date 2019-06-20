@@ -1,6 +1,6 @@
 // Package config is the run time representation of
 // the config.yml file and takes in all the details
-// of the databases and tcp server and port.
+// of the databases and tcp server and port
 package config
 
 type AppConfig struct {
