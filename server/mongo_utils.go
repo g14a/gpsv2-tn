@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"gitlab.com/gpsv2/db"
-	"gitlab.com/gpsv2/errcheck"
+	"gitlab.com/gpsv2/errorcheck"
 	"gitlab.com/gpsv2/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -32,19 +32,19 @@ func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device) error {
 	// already of the device by filtering using the IMEI number.
 	cursor, err := vehicleDetailsCollection.Find(vctx, bson.M{"imeinumber": ais140Device.IMEINumber}, &options)
 
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 
 	// If the cursor has data, it means there are
 	// already documents of the device. So we only need to update.
 	if cursor.Next(vctx) {
 		_, err := vehicleDetailsCollection.ReplaceOne(vctx, bson.M{"imeinumber": ais140Device.IMEINumber}, ais140Device)
-		errcheck.CheckError(err)
+		errorcheck.CheckError(err)
 
 	} else {
 		// if the cursor doesn't any documents of the devices
 		// it means this will be the first document
 		_, err = vehicleDetailsCollection.InsertOne(vctx, ais140Device)
-		errcheck.CheckError(err)
+		errorcheck.CheckError(err)
 	}
 
 	// Now insert in the live database. This doesn't have any conditions.
@@ -61,7 +61,7 @@ func insertAIS140HistoryDataMongo(ais140device *models.AIS140Device) error {
 
 	collectionMutex.Lock()
 	_, err := historyLHcollection.InsertOne(hctx, ais140device)
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 
 	collectionMutex.Unlock()
 
@@ -90,19 +90,19 @@ func insertGTPLDataMongo(gtplDevice *models.GTPLDevice) error {
 	// already of the device by filtering using the DeviceID.
 	cursor, err := vehicleDetailsCollection.Find(vctx, bson.M{"deviceid": gtplDevice.DeviceID}, &options)
 
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 
 	// If the cursor has data, it means there are
 	// already documents of the device. So we only need to update.
 	if cursor.Next(vctx) {
 		_, err := vehicleDetailsCollection.ReplaceOne(vctx, bson.M{"deviceid": gtplDevice.DeviceID}, gtplDevice)
-		errcheck.CheckError(err)
+		errorcheck.CheckError(err)
 
 	} else {
 		// if the cursor doesn't any documents of the devices
 		// it means this will be the first document
 		_, err = vehicleDetailsCollection.InsertOne(vctx, gtplDevice)
-		errcheck.CheckError(err)
+		errorcheck.CheckError(err)
 	}
 
 	// Now insert in the live database. This doesn't have any conditions.
@@ -118,7 +118,7 @@ func insertGTPLHistoryDataMongo(gtplDevice *models.GTPLDevice) error {
 
 	collectionMutex.Lock()
 	_, err := historyLHcollection.InsertOne(hctx, gtplDevice)
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 
 	collectionMutex.Unlock()
 
@@ -137,7 +137,7 @@ func insertRawDataMongo(rawData string) error {
 
 	collectionMutex.Lock()
 	_, err := rawDataCollection.InsertOne(rctx, rd)
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 
 	collectionMutex.Unlock()
 
@@ -151,7 +151,7 @@ func BulkWrite(devices []models.GTPLDevice) {
 
 	session, err := db.GetSessionFromClient()
 
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 
 	err = mongo.WithSession(ctx, session, func(sctx mongo.SessionContext) error {
 		_ = sctx.StartTransaction()
@@ -167,7 +167,7 @@ func BulkWrite(devices []models.GTPLDevice) {
 
 		_, err := locationHistoriesCollection.BulkWrite(sctx, operations)
 
-		errcheck.CheckError(err)
+		errorcheck.CheckError(err)
 
 		_ = session.CommitTransaction(sctx)
 

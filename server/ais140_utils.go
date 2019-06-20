@@ -4,7 +4,7 @@ package server
 
 import (
 	"encoding/csv"
-	"gitlab.com/gpsv2/errcheck"
+	"gitlab.com/gpsv2/errorcheck"
 	"gitlab.com/gpsv2/models"
 	"gitlab.com/gpsv2/utils"
 	"strconv"
@@ -20,7 +20,7 @@ func ParseAIS140Data(rawData string) models.AIS140Device {
 
 	csvData, err := r.ReadAll()
 
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 
 	var ais140Device models.AIS140Device
 

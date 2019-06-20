@@ -5,7 +5,7 @@ package db
 import (
 	"context"
 	"gitlab.com/gpsv2/config"
-	"gitlab.com/gpsv2/errcheck"
+	"gitlab.com/gpsv2/errorcheck"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"sync"
@@ -27,6 +27,8 @@ func getMongoClient() *mongo.Client {
 	return mongoClient
 }
 
+// GetSessionFromClient gives a session from the client
+// returned by connectDBOfficial
 func GetSessionFromClient() (mongo.Session, error) {
 	once.Do(func() {
 		connectDBOfficial()
@@ -74,18 +76,18 @@ func connectDBOfficial() {
 	mClient, err := mongo.NewClient(options.Client().ApplyURI(appConfigInstance.Mongoconfig.URL))
 	historyClient, err := mongo.NewClient(options.Client().ApplyURI(appConfigInstance.HistoryMongoConfig.BackupURL))
 
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 
 	// Pings the database for a max of 10 seconds. Afterwards it gives an error.
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
 	// connect to live db
 	err = mClient.Connect(ctx)
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 
 	// connect to history db
 	err = historyClient.Connect(ctx)
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 
 	mongoClient = mClient
 	historyMongoClient = historyClient

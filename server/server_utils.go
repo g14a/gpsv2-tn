@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 	"gitlab.com/gpsv2/config"
-	"gitlab.com/gpsv2/errcheck"
+	"gitlab.com/gpsv2/errorcheck"
 	"gitlab.com/gpsv2/models"
 	"io"
 	"log"
@@ -87,10 +87,10 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 					// Filter live and history data.
 					if gtplDevice.DeviceTimeNow.Day() == time.Now().Day() {
 						err = insertGTPLDataMongo(&gtplDevice)
-						errcheck.CheckError(err)
+						errorcheck.CheckError(err)
 					} else {
 						err = insertGTPLHistoryDataMongo(&gtplDevice)
-						errcheck.CheckError(err)
+						errorcheck.CheckError(err)
 					}
 				}
 			} else if strings.Contains(string(buf), "AVA") {
@@ -108,10 +108,10 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 					// Filter history packet using L and H field
 					if ais140Device.LiveOrHistoryPacket == "L" || (ais140Device.LiveOrHistoryPacket == "H" && ais140Device.DeviceTime.Day() == time.Now().Day()) {
 						err = insertAIS140DataIntoMongo(&ais140Device)
-						errcheck.CheckError(err)
+						errorcheck.CheckError(err)
 					} else {
 						err = insertAIS140HistoryDataMongo(&ais140Device)
-						errcheck.CheckError(err)
+						errorcheck.CheckError(err)
 					}
 				}
 			}
@@ -120,7 +120,7 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 	}
 }
 
-// SignalHandler notices termination signals or
+// signalHandler notices termination signals or
 // interrupts from the command line. Eg: ctrl-c and exits cleanly
 func signalHandler() {
 	sigchan := make(chan os.Signal, 1)

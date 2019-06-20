@@ -4,7 +4,7 @@ package server
 
 import (
 	"gitlab.com/gpsv2/config"
-	"gitlab.com/gpsv2/errcheck"
+	"gitlab.com/gpsv2/errorcheck"
 	"log"
 	"net"
 )
@@ -20,7 +20,7 @@ func StartServer() {
 
 	ln, err := net.Listen("tcp", tcpAddress)
 
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 
 	defer ln.Close()
 	go signalHandler()
