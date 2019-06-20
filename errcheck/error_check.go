@@ -1,3 +1,4 @@
+// Package errcheck just checks if an error occurs and logs it on stdout
 package errcheck
 
 import "log"

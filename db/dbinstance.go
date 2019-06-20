@@ -1,3 +1,5 @@
+// Package db assists in getting mongo clients, connections
+// and contexts of the databases needed
 package db
 
 import (
