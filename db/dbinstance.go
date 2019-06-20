@@ -47,7 +47,7 @@ func getHistoryMongoClient() *mongo.Client {
 }
 
 // GetMongoCollectionWithContext is mostly used by other functions
-// to insert data into the collection which this function returns
+// to insert data into the collection which this function returns.
 func GetMongoCollectionWithContext(collectionName string) (*mongo.Collection, context.Context) {
 	mongoClient = getMongoClient()
 	collection := mongoClient.Database("gpsgolang").Collection(collectionName)
