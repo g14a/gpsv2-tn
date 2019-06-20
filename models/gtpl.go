@@ -1,3 +1,4 @@
+// Package models contains the models of specified devices and raw data
 package models
 
 import "time"
