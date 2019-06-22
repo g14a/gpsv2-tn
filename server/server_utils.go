@@ -2,12 +2,6 @@ package server
 
 import (
 	"fmt"
-	"gitlab.com/gpsv2/config"
-<<<<<<< HEAD
-	"gitlab.com/gpsv2/errorcheck"
-=======
->>>>>>> dev
-	"gitlab.com/gpsv2/models"
 	"io"
 	"log"
 	"net"
@@ -16,6 +10,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"gitlab.com/gpsv2/config"
+	"gitlab.com/gpsv2/models"
 )
 
 // HandleConnection handles a connection by firing
@@ -79,15 +76,6 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 
 					gtplDevice = ParseGTPLData(individualRecord)
 
-<<<<<<< HEAD
-					// Filter live and history data.
-					if gtplDevice.DeviceTimeNow.Day() == time.Now().Day() {
-						err = insertGTPLDataMongo(&gtplDevice)
-						errorcheck.CheckError(err)
-					} else {
-						err = insertGTPLHistoryDataMongo(&gtplDevice)
-						errorcheck.CheckError(err)
-=======
 					// ignores if an empty data occurs
 					if (models.GTPLDevice{}) != gtplDevice {
 
@@ -98,7 +86,6 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 							insertGTPLHistoryDataMongo(&gtplDevice)
 							insertGTPLIntoSQL(gtplDevice)
 						}
->>>>>>> dev
 					}
 				}
 
@@ -114,15 +101,6 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 
 					ais140Device = ParseAIS140Data(individualRecord)
 
-<<<<<<< HEAD
-					// Filter history packet using L and H field
-					if ais140Device.LiveOrHistoryPacket == "L" || (ais140Device.LiveOrHistoryPacket == "H" && ais140Device.DeviceTime.Day() == time.Now().Day()) {
-						err = insertAIS140DataIntoMongo(&ais140Device)
-						errorcheck.CheckError(err)
-					} else {
-						err = insertAIS140HistoryDataMongo(&ais140Device)
-						errorcheck.CheckError(err)
-=======
 					// ignores if an empty data occurs
 					if (models.AIS140Device{}) != ais140Device {
 						if ais140Device.LiveOrHistoryPacket == "L" || (ais140Device.LiveOrHistoryPacket == "H" && ais140Device.DeviceTime.Day() == time.Now().Day()) {
@@ -132,7 +110,6 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 							insertAIS140HistoryDataMongo(&ais140Device)
 							insertAIS140IntoSQL(ais140Device)
 						}
->>>>>>> dev
 					}
 				}
 			}

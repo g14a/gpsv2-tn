@@ -12,13 +12,8 @@ import (
 
 // insertAIS140DataIntoMongo inserts a AIS140 device document
 // into the live Mongo DB. It essentially updates the documents in a
-<<<<<<< HEAD
-// seperate collection which contains the latest state of the device
-func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device) error {
-=======
 // seperate collection which contains the latest state of the device.
 func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device) {
->>>>>>> dev
 	// the live mongo db collection.
 
 	locationHistoriesCollection, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
@@ -60,13 +55,8 @@ func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device) {
 	errorcheck.CheckError(err)
 }
 
-<<<<<<< HEAD
-// insertAIS140HistoryDataMongo inserts history data into the history database
-func insertAIS140HistoryDataMongo(ais140device *models.AIS140Device) error {
-=======
 // insertAIS140HistoryDataMongo inserts history data into the history database.
 func insertAIS140HistoryDataMongo(ais140device *models.AIS140Device) {
->>>>>>> dev
 
 	historyLHcollection, hctx := db.GetHistoryCollectionsWithContext(historyLHcollection)
 
@@ -81,14 +71,9 @@ func insertAIS140HistoryDataMongo(ais140device *models.AIS140Device) {
 
 // insertGTPLDataMongo inserts a GTPL device document
 // into the live Mongo DB. It essentially updates the documents in a
-<<<<<<< HEAD
-// seperate collection which contains the latest state of the device
-func insertGTPLDataMongo(gtplDevice *models.GTPLDevice) error {
-=======
 // seperate collection which contains the latest state of the device.
 func insertGTPLDataMongo(gtplDevice *models.GTPLDevice) {
 
->>>>>>> dev
 	// the live mongo db collection.
 	locationHistoriesCollection, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
 
@@ -129,13 +114,8 @@ func insertGTPLDataMongo(gtplDevice *models.GTPLDevice) {
 	errorcheck.CheckError(err)
 }
 
-<<<<<<< HEAD
-// insertGTPLHistoryDataMongo inserts history data into the history database
-func insertGTPLHistoryDataMongo(gtplDevice *models.GTPLDevice) error {
-=======
 // insertGTPLHistoryDataMongo inserts history data into the history database.
 func insertGTPLHistoryDataMongo(gtplDevice *models.GTPLDevice) {
->>>>>>> dev
 	historyLHcollection, hctx := db.GetHistoryCollectionsWithContext(historyLHcollection)
 
 	collectionMutex.Lock()
@@ -148,13 +128,8 @@ func insertGTPLHistoryDataMongo(gtplDevice *models.GTPLDevice) {
 }
 
 // insertRawDataMongo inserts any raw data given by any device
-<<<<<<< HEAD
-// into an extra collection in the history database
-func insertRawDataMongo(rawData string) error {
-=======
 // into an extra collection in the history database.
 func insertRawDataMongo(rawData string) {
->>>>>>> dev
 
 	rawDataCollection, rctx := db.GetHistoryCollectionsWithContext(rawDataCollection)
 
