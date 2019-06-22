@@ -2,7 +2,7 @@ package server
 
 import (
 	"encoding/csv"
-	"gitlab.com/gpsv2/errcheck"
+	"gitlab.com/gpsv2/errorcheck"
 	"gitlab.com/gpsv2/models"
 	"gitlab.com/gpsv2/utils"
 	"strconv"
@@ -16,7 +16,7 @@ func ParseGTPLData(rawData string) models.GTPLDevice {
 	r := csv.NewReader(strings.NewReader(rawData))
 	csvData, err := r.ReadAll()
 
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 
 	var gtplDevice models.GTPLDevice
 

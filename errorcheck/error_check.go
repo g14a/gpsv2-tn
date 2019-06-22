@@ -1,4 +1,4 @@
-package errcheck
+package errorcheck
 
 import "log"
 

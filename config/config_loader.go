@@ -1,7 +1,7 @@
 package config
 
 import (
-	"gitlab.com/gpsv2/errcheck"
+	"gitlab.com/gpsv2/errorcheck"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"sync"
@@ -24,9 +24,9 @@ func GetAppConfig() *AppConfig {
 func loadConfig() {
 	yamlFile, err := ioutil.ReadFile("config.yml")
 
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 
 	err = yaml.Unmarshal(yamlFile, &appConfigInstance)
 
-	errcheck.CheckError(err)
+	errorcheck.CheckError(err)
 }
