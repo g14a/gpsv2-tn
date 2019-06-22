@@ -3,7 +3,10 @@ package server
 import (
 	"fmt"
 	"gitlab.com/gpsv2/config"
+<<<<<<< HEAD
 	"gitlab.com/gpsv2/errorcheck"
+=======
+>>>>>>> dev
 	"gitlab.com/gpsv2/models"
 	"io"
 	"log"
@@ -55,35 +58,28 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 
 		// if an error occurs deal with it
 		if err != nil {
-			// if the error is EOF which means the client
-			// is not sending any data, close the connection
 			if err == io.EOF {
 				fmt.Println("Connection closed EOF")
 				_ = conn.Close()
 			}
 		} else {
-			// Data is successfully read here.
 			dataMutex.Lock()
 
-			// If the Data contains GTPL Data, proceed with GTPL functions.
 			if strings.Contains(string(buf), "GTPL") {
-				// Split the data if it comes in a bulk using the
-				// GTPL delimiter # and put it into an array or a slice in Go.
+
 				dataSlice := strings.Split(string(buf), "#")
 
-				// Initialize a gtpl device for each record.
 				var gtplDevice models.GTPLDevice
 
-				// Iterate over the slice and put each record into the db.
 				for _, individualRecord := range dataSlice {
-
-					// First put the raw data.
-					err = insertRawDataMongo(individualRecord)
 					fmt.Println(individualRecord)
 
-					// Parse raw data into a device.
+					insertRawDataMongo(individualRecord)
+					insertRawDataSQL(individualRecord)
+
 					gtplDevice = ParseGTPLData(individualRecord)
 
+<<<<<<< HEAD
 					// Filter live and history data.
 					if gtplDevice.DeviceTimeNow.Day() == time.Now().Day() {
 						err = insertGTPLDataMongo(&gtplDevice)
@@ -91,20 +87,34 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 					} else {
 						err = insertGTPLHistoryDataMongo(&gtplDevice)
 						errorcheck.CheckError(err)
+=======
+					// ignores if an empty data occurs
+					if (models.GTPLDevice{}) != gtplDevice {
+
+						if gtplDevice.DeviceTimeNow.Day() == time.Now().Day() {
+							insertGTPLDataMongo(&gtplDevice)
+							insertGTPLIntoSQL(gtplDevice)
+						} else {
+							insertGTPLHistoryDataMongo(&gtplDevice)
+							insertGTPLIntoSQL(gtplDevice)
+						}
+>>>>>>> dev
 					}
 				}
+
 			} else if strings.Contains(string(buf), "AVA") {
-				// If the raw data contains AIS140 data split it using *
 				dataSlice := strings.Split(string(buf), "*")
 
 				var ais140Device models.AIS140Device
 
 				for _, individualRecord := range dataSlice {
 
-					err = insertRawDataMongo(individualRecord)
-					fmt.Println(individualRecord)
+					insertRawDataMongo(individualRecord)
+					insertRawDataSQL(individualRecord)
+
 					ais140Device = ParseAIS140Data(individualRecord)
 
+<<<<<<< HEAD
 					// Filter history packet using L and H field
 					if ais140Device.LiveOrHistoryPacket == "L" || (ais140Device.LiveOrHistoryPacket == "H" && ais140Device.DeviceTime.Day() == time.Now().Day()) {
 						err = insertAIS140DataIntoMongo(&ais140Device)
@@ -112,6 +122,17 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 					} else {
 						err = insertAIS140HistoryDataMongo(&ais140Device)
 						errorcheck.CheckError(err)
+=======
+					// ignores if an empty data occurs
+					if (models.AIS140Device{}) != ais140Device {
+						if ais140Device.LiveOrHistoryPacket == "L" || (ais140Device.LiveOrHistoryPacket == "H" && ais140Device.DeviceTime.Day() == time.Now().Day()) {
+							insertAIS140DataIntoMongo(&ais140Device)
+							insertAIS140IntoSQL(ais140Device)
+						} else {
+							insertAIS140HistoryDataMongo(&ais140Device)
+							insertAIS140IntoSQL(ais140Device)
+						}
+>>>>>>> dev
 					}
 				}
 			}
