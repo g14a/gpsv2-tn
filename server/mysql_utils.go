@@ -4,9 +4,13 @@ import (
 	"gitlab.com/gpsv2/config"
 	"gitlab.com/gpsv2/db"
 	"gitlab.com/gpsv2/models"
+	"sync"
 )
 
-func insertGTPLIntoSQL(gtplDevice models.GTPLDevice) {
+func insertGTPLIntoSQL(gtplDevice models.GTPLDevice, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
+
 	appConfigInstance := config.GetAppConfig()
 
 	sqlDB := db.GetSQLDB()
@@ -16,7 +20,10 @@ func insertGTPLIntoSQL(gtplDevice models.GTPLDevice) {
 	sqlDB.Table(gtplTable).Create(&gtplDevice)
 }
 
-func insertAIS140IntoSQL(ais140Device models.AIS140Device) {
+func insertAIS140IntoSQL(ais140Device models.AIS140Device, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
+
 	appConfigInstance := config.GetAppConfig()
 
 	sqlDB := db.GetSQLDB()
@@ -26,7 +33,10 @@ func insertAIS140IntoSQL(ais140Device models.AIS140Device) {
 	sqlDB.Table(ais140Table).Create(ais140Device)
 }
 
-func insertRawDataSQL(rawData string) {
+func insertRawDataSQL(rawData string, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
+
 	appConfigInstance := config.GetAppConfig()
 
 	sqlDB := db.GetSQLDB()

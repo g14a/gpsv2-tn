@@ -38,6 +38,8 @@ var (
 
 	collectionMutex = &sync.Mutex{}
 	dataMutex       = &sync.Mutex{}
+
+	dbWg = sync.WaitGroup{}
 )
 
 // readTCPClient reads data sent by the device(a TCP client)
@@ -71,8 +73,8 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 				for _, individualRecord := range dataSlice {
 					fmt.Println(individualRecord)
 
-					insertRawDataMongo(individualRecord)
-					insertRawDataSQL(individualRecord)
+					go insertRawDataMongo(individualRecord, &dbWg)
+					go insertRawDataSQL(individualRecord, &dbWg)
 
 					gtplDevice = ParseGTPLData(individualRecord)
 
@@ -80,11 +82,11 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 					if (models.GTPLDevice{}) != gtplDevice {
 
 						if gtplDevice.DeviceTimeNow.Day() == time.Now().Day() {
-							insertGTPLDataMongo(&gtplDevice)
-							insertGTPLIntoSQL(gtplDevice)
+							go insertGTPLDataMongo(&gtplDevice, &dbWg)
+							go insertGTPLIntoSQL(gtplDevice, &dbWg)
 						} else {
-							insertGTPLHistoryDataMongo(&gtplDevice)
-							insertGTPLIntoSQL(gtplDevice)
+							go insertGTPLHistoryDataMongo(&gtplDevice, &dbWg)
+							go insertGTPLIntoSQL(gtplDevice, &dbWg)
 						}
 					}
 				}
@@ -96,23 +98,24 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 
 				for _, individualRecord := range dataSlice {
 
-					insertRawDataMongo(individualRecord)
-					insertRawDataSQL(individualRecord)
+					go insertRawDataMongo(individualRecord, &dbWg)
+					go insertRawDataSQL(individualRecord, &dbWg)
 
 					ais140Device = ParseAIS140Data(individualRecord)
 
 					// ignores if an empty data occurs
 					if (models.AIS140Device{}) != ais140Device {
 						if ais140Device.LiveOrHistoryPacket == "L" || (ais140Device.LiveOrHistoryPacket == "H" && ais140Device.DeviceTime.Day() == time.Now().Day()) {
-							insertAIS140DataIntoMongo(&ais140Device)
-							insertAIS140IntoSQL(ais140Device)
+							go insertAIS140DataIntoMongo(&ais140Device, &dbWg)
+							go insertAIS140IntoSQL(ais140Device, &dbWg)
 						} else {
-							insertAIS140HistoryDataMongo(&ais140Device)
-							insertAIS140IntoSQL(ais140Device)
+							go insertAIS140HistoryDataMongo(&ais140Device, &dbWg)
+							go insertAIS140IntoSQL(ais140Device, &dbWg)
 						}
 					}
 				}
 			}
+			dbWg.Wait()
 			dataMutex.Unlock()
 		}
 	}

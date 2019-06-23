@@ -8,14 +8,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	options2 "go.mongodb.org/mongo-driver/mongo/options"
+	"sync"
 )
 
 // insertAIS140DataIntoMongo inserts a AIS140 device document
 // into the live Mongo DB. It essentially updates the documents in a
 // seperate collection which contains the latest state of the device.
-func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device) {
+func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device, wg *sync.WaitGroup) {
 	// the live mongo db collection.
-
+	wg.Add(1)
+	defer wg.Done()
 	locationHistoriesCollection, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
 
 	// the updating mongo db collection
@@ -56,7 +58,9 @@ func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device) {
 }
 
 // insertAIS140HistoryDataMongo inserts history data into the history database.
-func insertAIS140HistoryDataMongo(ais140device *models.AIS140Device) {
+func insertAIS140HistoryDataMongo(ais140device *models.AIS140Device, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
 
 	historyLHcollection, hctx := db.GetHistoryCollectionsWithContext(historyLHcollection)
 
@@ -72,7 +76,9 @@ func insertAIS140HistoryDataMongo(ais140device *models.AIS140Device) {
 // insertGTPLDataMongo inserts a GTPL device document
 // into the live Mongo DB. It essentially updates the documents in a
 // seperate collection which contains the latest state of the device.
-func insertGTPLDataMongo(gtplDevice *models.GTPLDevice) {
+func insertGTPLDataMongo(gtplDevice *models.GTPLDevice, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
 
 	// the live mongo db collection.
 	locationHistoriesCollection, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
@@ -115,7 +121,10 @@ func insertGTPLDataMongo(gtplDevice *models.GTPLDevice) {
 }
 
 // insertGTPLHistoryDataMongo inserts history data into the history database.
-func insertGTPLHistoryDataMongo(gtplDevice *models.GTPLDevice) {
+func insertGTPLHistoryDataMongo(gtplDevice *models.GTPLDevice, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
+
 	historyLHcollection, hctx := db.GetHistoryCollectionsWithContext(historyLHcollection)
 
 	collectionMutex.Lock()
@@ -129,7 +138,9 @@ func insertGTPLHistoryDataMongo(gtplDevice *models.GTPLDevice) {
 
 // insertRawDataMongo inserts any raw data given by any device
 // into an extra collection in the history database.
-func insertRawDataMongo(rawData string) {
+func insertRawDataMongo(rawData string, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
 
 	rawDataCollection, rctx := db.GetHistoryCollectionsWithContext(rawDataCollection)
 
