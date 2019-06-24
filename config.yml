@@ -17,6 +17,10 @@ mysql:
     ais140_devices: ais140_devices
     raw_data: raw_data
 
+amqp:
+  amqpurl: amqp://guest:guest@localhost:5672/
+  queuename: gpsampq
+
 tcp:
   serverURL: "139.59.3.14"
   port: "5588"

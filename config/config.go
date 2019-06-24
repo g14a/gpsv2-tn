@@ -7,6 +7,7 @@ type AppConfig struct {
 	Mongoconfig        *Mongoconfig       `yaml:"mongo"`
 	HistoryMongoConfig *BackupMongoConfig `yaml:"mongohistory"`
 	MysqlConfig        *MysqlConfig       `yaml:"mysql"`
+	AMQPConfig         *AMQPConfig        `yaml:"amqp"`
 	TCPSocketConfig    *TCPSocketConfig   `yaml:"tcp"`
 }
 
@@ -39,6 +40,11 @@ type SQLTables struct {
 	GTPLDevices   string `yaml:"gtpl_devices"`
 	AIS140Devices string `yaml:"ais140_devices"`
 	RawData       string `yaml:"raw_data"`
+}
+
+type AMQPConfig struct {
+	URL       string `yaml:"amqpurl"`
+	AMQPQueue string `yaml:"queuename"`
 }
 
 type TCPSocketConfig struct {

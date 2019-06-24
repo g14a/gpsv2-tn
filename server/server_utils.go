@@ -2,17 +2,16 @@ package server
 
 import (
 	"fmt"
+	"github.com/streadway/amqp"
+	"gitlab.com/gpsv2/amqputils"
+	"gitlab.com/gpsv2/config"
+	"gitlab.com/gpsv2/errorcheck"
 	"io"
 	"log"
 	"net"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
-	"time"
-
-	"gitlab.com/gpsv2/config"
-	"gitlab.com/gpsv2/models"
 )
 
 // HandleConnection handles a connection by firing
@@ -28,18 +27,11 @@ func HandleConnection(conn net.Conn) {
 }
 
 var (
-	// live database collections
-	locationHistoriesCollection = config.GetAppConfig().Mongoconfig.Collections.LocationHistoriesCollection
-	vehicleDetailsCollection    = config.GetAppConfig().Mongoconfig.Collections.VehicleDetailsCollection
+	// AMQP
+	amqpConnection = amqputils.GetAMQPInstance()
+	amqpQueue      = config.GetAppConfig().AMQPConfig.AMQPQueue
 
-	// backups collections
-	historyLHcollection = config.GetAppConfig().HistoryMongoConfig.BackupCollections.BackupLocationHistoriesColl
-	rawDataCollection   = config.GetAppConfig().HistoryMongoConfig.BackupCollections.RawDataCollection
-
-	collectionMutex = &sync.Mutex{}
-	dataMutex       = &sync.Mutex{}
-
-	dbWg = sync.WaitGroup{}
+	dataMutex = &sync.Mutex{}
 )
 
 // readTCPClient reads data sent by the device(a TCP client)
@@ -64,58 +56,17 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 		} else {
 			dataMutex.Lock()
 
-			if strings.Contains(string(buf), "GTPL") {
+			ch, err := amqpConnection.Channel()
+			errorcheck.CheckError(err)
 
-				dataSlice := strings.Split(string(buf), "#")
+			q, err := ch.QueueDeclare(amqpQueue, false, false, false, false, nil)
 
-				var gtplDevice models.GTPLDevice
+			err = ch.Publish("", q.Name, false, false,
+				amqp.Publishing{
+					ContentType: "text/plain",
+					Body:        []byte(buf),
+				})
 
-				for _, individualRecord := range dataSlice {
-					fmt.Println(individualRecord)
-
-					go insertRawDataMongo(individualRecord, &dbWg)
-					go insertRawDataSQL(individualRecord, &dbWg)
-
-					gtplDevice = ParseGTPLData(individualRecord)
-
-					// ignores if an empty data occurs
-					if (models.GTPLDevice{}) != gtplDevice {
-
-						if gtplDevice.DeviceTimeNow.Day() == time.Now().Day() {
-							go insertGTPLDataMongo(&gtplDevice, &dbWg)
-							go insertGTPLIntoSQL(gtplDevice, &dbWg)
-						} else {
-							go insertGTPLHistoryDataMongo(&gtplDevice, &dbWg)
-							go insertGTPLIntoSQL(gtplDevice, &dbWg)
-						}
-					}
-				}
-
-			} else if strings.Contains(string(buf), "AVA") {
-				dataSlice := strings.Split(string(buf), "*")
-
-				var ais140Device models.AIS140Device
-
-				for _, individualRecord := range dataSlice {
-
-					go insertRawDataMongo(individualRecord, &dbWg)
-					go insertRawDataSQL(individualRecord, &dbWg)
-
-					ais140Device = ParseAIS140Data(individualRecord)
-
-					// ignores if an empty data occurs
-					if (models.AIS140Device{}) != ais140Device {
-						if ais140Device.LiveOrHistoryPacket == "L" || (ais140Device.LiveOrHistoryPacket == "H" && ais140Device.DeviceTime.Day() == time.Now().Day()) {
-							go insertAIS140DataIntoMongo(&ais140Device, &dbWg)
-							go insertAIS140IntoSQL(ais140Device, &dbWg)
-						} else {
-							go insertAIS140HistoryDataMongo(&ais140Device, &dbWg)
-							go insertAIS140IntoSQL(ais140Device, &dbWg)
-						}
-					}
-				}
-			}
-			dbWg.Wait()
 			dataMutex.Unlock()
 		}
 	}
