@@ -30,8 +30,6 @@ var (
 	// AMQP
 	amqpConnection = amqputils.GetAMQPInstance()
 	amqpQueue      = config.GetAppConfig().AMQPConfig.AMQPQueue
-
-	dataMutex = &sync.Mutex{}
 )
 
 // readTCPClient reads data sent by the device(a TCP client)
@@ -54,7 +52,6 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 				_ = conn.Close()
 			}
 		} else {
-			dataMutex.Lock()
 
 			ch, err := amqpConnection.Channel()
 			errorcheck.CheckError(err)
@@ -66,8 +63,6 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 					ContentType: "text/plain",
 					Body:        []byte(buf),
 				})
-
-			dataMutex.Unlock()
 		}
 	}
 }

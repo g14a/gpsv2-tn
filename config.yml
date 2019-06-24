@@ -1,26 +1,7 @@
-mongo:
-  url: mongodb://139.59.3.14:27017
-  collections:
-    location_histories: location_histories
-    vehicle_details: vehicle_details
-
-mongohistory:
-  backupurl: mongodb://206.189.137.125:27017
-  backupcollections:
-    location_histories: location_histories
-    raw_data: raw_data
-
-mysql:
-  url: gps:Sqlgpsgolang1#@tcp(localhost:3306)/gpsv2
-  tables:
-    gtpl_devices: gtpl_devices
-    ais140_devices: ais140_devices
-    raw_data: raw_data
-
 amqp:
   amqpurl: amqp://guest:guest@localhost:5672/
   queuename: gpsampq
 
 tcp:
   serverURL: "139.59.3.14"
-  port: "5588"
+  port: "8000"
