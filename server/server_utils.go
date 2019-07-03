@@ -40,6 +40,9 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
+	ch, err := amqpConnection.Channel()
+	errorcheck.CheckError(err)
+
 	for {
 		// Initialize a buffer of 5KB to be read from the client and read using conn.Read
 		buf := make([]byte, 5*1024)
@@ -53,10 +56,9 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 			}
 		} else {
 
-			ch, err := amqpConnection.Channel()
-			errorcheck.CheckError(err)
-
 			q, err := ch.QueueDeclare(amqpQueue, false, false, false, false, nil)
+
+			errorcheck.CheckError(err)
 
 			err = ch.Publish("", q.Name, false, false,
 				amqp.Publishing{
