@@ -4,4 +4,4 @@ amqp:
 
 tcp:
   serverURL: "139.59.3.14"
-  port: "8000"
+  port: "6666"
