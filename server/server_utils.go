@@ -3,9 +3,9 @@ package server
 import (
 	"fmt"
 	"github.com/streadway/amqp"
-	"gitlab.com/gpsv2/amqputils"
-	"gitlab.com/gpsv2/config"
-	"gitlab.com/gpsv2/errorcheck"
+	"gitlab.com/gpsv2-kudankulam/amqputils"
+	"gitlab.com/gpsv2-kudankulam/config"
+	"gitlab.com/gpsv2-kudankulam/errorcheck"
 	"io"
 	"log"
 	"net"
@@ -53,6 +53,7 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 			if err == io.EOF {
 				fmt.Println("Connection closed EOF")
 				_ = conn.Close()
+				count--
 			}
 		} else {
 

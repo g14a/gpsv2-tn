@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gitlab.com/gpsv2/server"
+	"gitlab.com/gpsv2-kudankulam/server"
 )
 
 // main starts the server
