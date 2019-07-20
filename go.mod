@@ -1,4 +1,4 @@
-module gitlab.com/gpsv2-kudankulam
+module gitlab.com/gpsv2-tn
 
 go 1.12
 

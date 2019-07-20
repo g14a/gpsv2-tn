@@ -1,7 +1,7 @@
 amqp:
-  amqpurl: amqp://guest:guest@localhost:5672/
-  queuename: gpsampq-kudankulam
+  amqpurl: amqp://gps:gps@localhost:5672/
+  queuename: gpsampq-tn
 
 tcp:
   serverURL: "139.59.3.14"
-  port: "5577"
+  port: "7788"

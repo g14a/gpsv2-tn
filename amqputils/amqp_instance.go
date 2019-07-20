@@ -2,8 +2,8 @@ package amqputils
 
 import (
 	"github.com/streadway/amqp"
-	"gitlab.com/gpsv2-kudankulam/config"
-	"gitlab.com/gpsv2-kudankulam/errorcheck"
+	"gitlab.com/gpsv2-tn/config"
+	"gitlab.com/gpsv2-tn/errorcheck"
 	"sync"
 )
 

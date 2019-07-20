@@ -3,9 +3,9 @@ package server
 import (
 	"fmt"
 	"github.com/streadway/amqp"
-	"gitlab.com/gpsv2-kudankulam/amqputils"
-	"gitlab.com/gpsv2-kudankulam/config"
-	"gitlab.com/gpsv2-kudankulam/errorcheck"
+	"gitlab.com/gpsv2-tn/amqputils"
+	"gitlab.com/gpsv2-tn/config"
+	"gitlab.com/gpsv2-tn/errorcheck"
 	"io"
 	"log"
 	"net"
@@ -20,7 +20,6 @@ func HandleConnection(conn net.Conn) {
 
 	var wg sync.WaitGroup
 
-	wg.Add(1)
 	go readTCPClient(conn, &wg)
 	wg.Wait()
 
@@ -38,10 +37,9 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 
 	fmt.Printf("\n[SERVER] Client connected %s -> %s -- Number of clients connected (%d)\n", conn.RemoteAddr(), conn.LocalAddr(), count)
 
+	wg.Add(1)
 	defer wg.Done()
 
-	ch, err := amqpConnection.Channel()
-	errorcheck.CheckError(err)
 
 	for {
 		// Initialize a buffer of 5KB to be read from the client and read using conn.Read
@@ -56,16 +54,21 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 				count--
 			}
 		} else {
+			publishChannel, err := amqpConnection.Channel()
 
-			q, err := ch.QueueDeclare(amqpQueue, false, false, false, false, nil)
+			q, err := publishChannel.QueueDeclare(amqpQueue, false, false, false, false, nil)
 
 			errorcheck.CheckError(err)
 
-			err = ch.Publish("", q.Name, false, false,
+			fmt.Println(string(buf))
+
+			err = publishChannel.Publish("", q.Name, false, false,
 				amqp.Publishing{
 					ContentType: "text/plain",
 					Body:        []byte(buf),
 				})
+
+			_ = publishChannel.Close()
 		}
 	}
 }
