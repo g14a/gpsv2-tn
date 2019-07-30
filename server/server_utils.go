@@ -11,7 +11,9 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
+	"time"
 )
 
 // HandleConnection handles a connection by firing
@@ -40,10 +42,9 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 	wg.Add(1)
 	defer wg.Done()
 
-
 	for {
 		// Initialize a buffer of 5KB to be read from the client and read using conn.Read
-		buf := make([]byte, 5*1024)
+		buf := make([]byte, 1024)
 		_, err := conn.Read(buf)
 
 		// if an error occurs deal with it
@@ -60,15 +61,40 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 
 			errorcheck.CheckError(err)
 
-			fmt.Println(string(buf))
+			fmt.Println("ONE CHUNK......")
 
-			err = publishChannel.Publish("", q.Name, false, false,
-				amqp.Publishing{
-					ContentType: "text/plain",
-					Body:        []byte(buf),
-				})
+			buffer := string(buf)
+
+			if strings.Contains(buffer, "GTPL") || strings.Contains(buffer, "BSTPL") {
+				dataslice := strings.Split(string(buf), "#")
+
+				for _, record := range dataslice {
+					fmt.Println(record)
+
+					err = publishChannel.Publish("", q.Name, false, false,
+						amqp.Publishing{
+							ContentType: "text/plain",
+							Body:        []byte(record),
+						})
+				}
+
+			} else if strings.Contains(buffer, "AVA") || strings.Contains(buffer, "*") {
+				dataslice := strings.Split(string(buf), "*")
+
+				for _, record := range dataslice {
+					fmt.Println(record)
+
+					err = publishChannel.Publish("", q.Name, false, false,
+						amqp.Publishing{
+							ContentType: "text/plain",
+							Body:        []byte(record),
+						})
+				}
+			}
 
 			_ = publishChannel.Close()
+
+			time.Sleep(time.Second*1)
 		}
 	}
 }
