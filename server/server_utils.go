@@ -11,21 +11,12 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"runtime"
 	"strings"
-	"sync"
-	"time"
 )
 
 // HandleConnection handles a connection by firing
 // up a seperate go routine for a TCP connection net.Conn
-func HandleConnection(conn net.Conn) {
-
-	var wg sync.WaitGroup
-
-	go readTCPClient(conn, &wg)
-	wg.Wait()
-
-}
 
 var (
 	// AMQP
@@ -35,12 +26,11 @@ var (
 
 // readTCPClient reads data sent by the device(a TCP client)
 // and pushes it to the DB in an overview. Read more documentation below
-func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
+func HandleConnection(conn net.Conn)  {
+
+	fmt.Println("running goroutines: ", runtime.NumGoroutine())
 
 	fmt.Printf("\n[SERVER] Client connected %s -> %s -- Number of clients connected (%d)\n", conn.RemoteAddr(), conn.LocalAddr(), count)
-
-	wg.Add(1)
-	defer wg.Done()
 
 	for {
 		// Initialize a buffer of 5KB to be read from the client and read using conn.Read
@@ -69,6 +59,7 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 				dataslice := strings.Split(string(buf), "#")
 
 				for _, record := range dataslice {
+
 					fmt.Println(record)
 
 					err = publishChannel.Publish("", q.Name, false, false,
@@ -77,12 +68,13 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 							Body:        []byte(record),
 						})
 				}
+
+				_ = publishChannel.Close()
 
 			} else if strings.Contains(buffer, "AVA") || strings.Contains(buffer, "*") {
 				dataslice := strings.Split(string(buf), "*")
 
 				for _, record := range dataslice {
-					fmt.Println(record)
 
 					err = publishChannel.Publish("", q.Name, false, false,
 						amqp.Publishing{
@@ -90,11 +82,8 @@ func readTCPClient(conn net.Conn, wg *sync.WaitGroup) {
 							Body:        []byte(record),
 						})
 				}
+				_ = publishChannel.Close()
 			}
-
-			_ = publishChannel.Close()
-
-			time.Sleep(time.Second*1)
 		}
 	}
 }

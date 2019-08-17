@@ -3,5 +3,5 @@ amqp:
   queuename: gpsampq-tn
 
 tcp:
-  serverURL: "165.22.210.8"
+  serverURL: "134.209.149.112"
   port: "7788"

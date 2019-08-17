@@ -8,3 +8,7 @@ func CheckError(err error) {
 		log.Println("Some error: ", err.Error())
 	}
 }
+
+func init() {
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
+}

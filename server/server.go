@@ -8,7 +8,6 @@ import (
 	"sync"
 )
 
-var clients []net.Conn
 var count = 0
 var countMutex sync.Mutex
 
@@ -38,11 +37,7 @@ func StartServer() {
 			log.Println(err)
 		}
 
-		// Add the client to the connection array
-		clients = append(clients, conn)
-
 		go HandleConnection(conn)
 	}
 }
 
-// GTPL $1,867322035130152,A,170319,183004,9.960135,N,76.285625,E,0,20968,140,10,0,21,1,1,00.0250
