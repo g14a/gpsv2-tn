@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"gitlab.com/gpsv2-withoutrmtesting/models"
+	"gitlab.com/gpsv2-withoutrm/models"
 )
 
 var (

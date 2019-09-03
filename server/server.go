@@ -1,8 +1,8 @@
 package server
 
 import (
-	"gitlab.com/gpsv2-withoutrmtesting/config"
-	"gitlab.com/gpsv2-withoutrmtesting/errorcheck"
+	"gitlab.com/gpsv2-withoutrm/config"
+	"gitlab.com/gpsv2-withoutrm/errorcheck"
 	"log"
 	"net"
 	"sync"

@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"gitlab.com/gpsv2-withoutrmtesting/models"
+	"gitlab.com/gpsv2-withoutrm/models"
 )
 
 // ParseGTPLData parses the raw data sent

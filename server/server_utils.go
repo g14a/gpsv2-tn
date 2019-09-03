@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"gitlab.com/gpsv2-withoutrmtesting/models"
+	"gitlab.com/gpsv2-withoutrm/models"
 	"io"
 	"log"
 	"net"
