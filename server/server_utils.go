@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"gitlab.com/gpsv2-withoutrm/models"
+	"gitlab.com/gpsv2-withoutrmtesting/models"
 	"io"
 	"log"
 	"net"
@@ -44,9 +44,12 @@ func HandleConnection(conn net.Conn) {
 			if strings.Contains(buffer, "BSTPL") {
 				dataslice := strings.Split(string(buf), "#")
 
+				start := time.Now()
 				for _, record := range dataslice {
+
 					processBSTPLDevice(record)
 				}
+				fmt.Println(time.Since(start))
 
 			} else if strings.Contains(buffer, "GTPL") {
 				dataslice := strings.Split(string(buf), "#")
@@ -167,7 +170,6 @@ func processAIS140Device(record string) {
 		dbWg.Wait()
 	}
 }
-
 
 // signalHandler notices termination signals or
 // interrupts from the command line. Eg: ctrl-c and exits cleanly

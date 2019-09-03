@@ -1,4 +1,4 @@
-module gitlab.com/gpsv2-withoutrm
+module gitlab.com/gpsv2-withoutrmtesting
 
 go 1.12
 

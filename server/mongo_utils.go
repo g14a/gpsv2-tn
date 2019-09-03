@@ -2,17 +2,17 @@ package server
 
 import (
 	"fmt"
-	"gitlab.com/gpsv2-withoutrm/utils"
+	"gitlab.com/gpsv2-withoutrmtesting/utils"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"strconv"
 	"sync"
 	"time"
 
-	"gitlab.com/gpsv2-withoutrm/config"
-	"gitlab.com/gpsv2-withoutrm/db"
-	"gitlab.com/gpsv2-withoutrm/errorcheck"
-	"gitlab.com/gpsv2-withoutrm/models"
+	"gitlab.com/gpsv2-withoutrmtesting/config"
+	"gitlab.com/gpsv2-withoutrmtesting/db"
+	"gitlab.com/gpsv2-withoutrmtesting/errorcheck"
+	"gitlab.com/gpsv2-withoutrmtesting/models"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
