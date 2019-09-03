@@ -28,7 +28,7 @@ func HandleConnection(conn net.Conn) {
 
 	for {
 		// Initialize a buffer of 5KB to be read from the client and read using conn.Read
-		buf := make([]byte, 5*1024)
+		buf := make([]byte, 2*1024)
 		_, err := conn.Read(buf)
 
 		// if an error occurs deal with it
@@ -76,14 +76,12 @@ func processGTPLDevices(record string) {
 		mssqlDevice models.MSSQLDevice
 	)
 
-	dbWg.Add(4)
+	dbWg.Add(2)
 
 	gtplDevice = ParseGTPLData(record)
 
 	// ignores if an empty data occurs
 	if gtplDevice.Latitude != 0 && gtplDevice.Longitude != 0 && gtplDevice.DeviceID != "" {
-
-		fmt.Println(gtplDevice)
 
 		mssqlDevice = ParseMSSQLDeviceFromGTPL(gtplDevice)
 
@@ -110,7 +108,7 @@ func processBSTPLDevice(record string) {
 		mysqlDevice models.BSTPLSQLModel
 	)
 
-	dbWg.Add(4)
+	dbWg.Add(2)
 
 	bstplDevice = ParseBSTPLData(record)
 
@@ -119,7 +117,6 @@ func processBSTPLDevice(record string) {
 		recvTime := time.Now()
 
 		bstplDevice.CreatedTime = recvTime
-		fmt.Println(bstplDevice)
 
 		go insertBSTPLDataMongo(&bstplDevice, &dbWg)
 
@@ -146,14 +143,12 @@ func processAIS140Device(record string) {
 		mssqlDevice models.MSSQLDevice
 	)
 
-	dbWg.Add(4)
+	dbWg.Add(2)
 
 	ais140Device = ParseAIS140Data(record)
 
 	// ignores if an empty data occurs
 	if ais140Device.Latitude != 0 && ais140Device.Longitude != 0 && ais140Device.IMEINumber != "" {
-
-		fmt.Println(ais140Device)
 
 		mssqlDevice = ParseMSSQLDeviceFromAIS140(ais140Device)
 
@@ -167,7 +162,6 @@ func processAIS140Device(record string) {
 		dbWg.Wait()
 	}
 }
-
 
 // signalHandler notices termination signals or
 // interrupts from the command line. Eg: ctrl-c and exits cleanly

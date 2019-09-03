@@ -78,6 +78,7 @@ func insertGTPLDataMongo(gtplDevice *models.GTPLDevice, wg *sync.WaitGroup) {
 		_, err := locationHistoriesCollection.InsertOne(locCtx, gtplDevice)
 
 		insertFencingGTPL(gtplDevice)
+		calculateRunTime(gtplDevice.DeviceID)
 
 		errorcheck.CheckError(err)
 	}
@@ -130,8 +131,9 @@ func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device, wg *sync.WaitG
 
 	insertFencingAIS140(ais140Device)
 
-	errorcheck.CheckError(err)
+	calculateRunTime(ais140Device.IMEINumber)
 
+	errorcheck.CheckError(err)
 }
 
 func insertBSTPLDataMongo(bstplDevice *models.BSTPLDevice, wg *sync.WaitGroup) {
@@ -183,6 +185,7 @@ func insertBSTPLDataMongo(bstplDevice *models.BSTPLDevice, wg *sync.WaitGroup) {
 		_, err := locationHistoriesCollection.InsertOne(locCtx, bstplDevice)
 
 		insertFencingBSTPL(bstplDevice)
+		calculateRunTime(bstplDevice.VehicleID)
 
 		errorcheck.CheckError(err)
 	}
@@ -368,6 +371,8 @@ func calculateRunTime(deviceID string) {
 			log.Println(err)
 		}
 	}
+
+	fmt.Println(device.DeviceTime)
 }
 
 type deviceFence struct {

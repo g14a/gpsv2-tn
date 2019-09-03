@@ -54,4 +54,7 @@ type AIS140Device struct {
 	GeoFenceID 		  int64			`bson:"geo_code"`
 	GPSOdometer 	  int			`bson:"gps_odometer"`
 	Port 			  int 			`bson:"port"`
+	StartTime 		  time.Time		`bson:"start_time"`
+	EndTime			  time.Time		`bson:"end_time"`
+	RunTime 		  int 			`bson:"run_time"`
 }
