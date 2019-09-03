@@ -1,14 +1,27 @@
 package errorcheck
 
-import "log"
+import (
+	"log"
+	"os"
+)
 
-// CheckError checks if an error occurs and logs it on stdout.
+var (
+	logger *log.Logger
+)
+
+// CheckError checks if an error occurs and logs it on listener.log
 func CheckError(err error) {
 	if err != nil {
-		log.Println("Some error: ", err.Error())
+		logger.Println("error: ", err.Error())
 	}
 }
 
 func init() {
-	log.SetFlags(log.Lshortfile | log.LstdFlags)
+	logPath := "/root/gpsv2-tn/listener.log"
+
+	file, err := os.Create(logPath)
+
+	CheckError(err)
+
+	logger = log.New(file, "", log.LstdFlags | log.Lshortfile)
 }

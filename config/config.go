@@ -4,13 +4,21 @@
 package config
 
 type AppConfig struct {
-	AMQPConfig         *AMQPConfig        `yaml:"amqp"`
 	TCPSocketConfig    *TCPSocketConfig   `yaml:"tcp"`
+	Mongoconfig        *Mongoconfig       `yaml:"mongo"`
 }
 
-type AMQPConfig struct {
-	URL       string `yaml:"amqpurl"`
-	AMQPQueue string `yaml:"queuename"`
+type Mongoconfig struct {
+	URL         string                 `yaml:"url"`
+	DBName 		string 				   `yaml:"db"`
+	RawDB 		string 				   `yaml:"rawDB"`
+	Collections *MongoCollectionConfig `yaml:"collections"`
+}
+
+type MongoCollectionConfig struct {
+	LocationHistoriesCollection string `yaml:"location_histories"`
+	VehicleDetailsCollection    string `yaml:"vehicle_details"`
+	FenceDetailsCollection  	string `yaml:"fence_details"`
 }
 
 type TCPSocketConfig struct {
