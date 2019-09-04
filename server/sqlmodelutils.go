@@ -57,11 +57,6 @@ func ParseAIS140DataSQL(ais140Device models.AIS140Device) models.AIS140SQLModel 
 	sqlDevice.CardinalHead = ais140Device.Heading
 	sqlDevice.NumberOfSatellites = strconv.Itoa(ais140Device.NumberOfSatellites)
 	sqlDevice.GSM = strconv.Itoa(ais140Device.GSMStrength)
-	sqlDevice.MCC = strconv.Itoa(ais140Device.MCC)
-	sqlDevice.MNC = strconv.Itoa(ais140Device.MNC)
-	sqlDevice.LAC = strconv.Itoa(ais140Device.LAC)
-	sqlDevice.CellID = ais140Device.CellID
-	sqlDevice.NMR = ais140Device.NMR
 	sqlDevice.DigitalOutputStatus = ais140Device.DigitalOutputStatus
 	sqlDevice.DigitalInputStatus = ais140Device.DigitalInputStatus
 	sqlDevice.SequenceNumber = ais140Device.SequenceNumber
@@ -69,8 +64,6 @@ func ParseAIS140DataSQL(ais140Device models.AIS140Device) models.AIS140SQLModel 
 	sqlDevice.TamperAlert = ais140Device.TamperAlert
 	sqlDevice.InternalBatteryVoltage = ais140Device.InternalBatteryVoltage
 	sqlDevice.VehicleBatteryVoltage = ais140Device.VehicleBatteryVoltage
-	sqlDevice.PDOP  = strconv.FormatFloat(ais140Device.PDOP, 'E', -1, 32)
-	sqlDevice.HDOP = strconv.FormatFloat(ais140Device.HDOP,  'E', -1, 32)
 
 	sqlDevice.FixTime = ais140Device.DeviceTime
 	sqlDevice.CreateDate = time.Now()

@@ -6,7 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"strconv"
-	"sync"
 	"time"
 
 	"gitlab.com/gpsv2-withoutrm/config"
@@ -15,7 +14,6 @@ import (
 	"gitlab.com/gpsv2-withoutrm/models"
 	"go.mongodb.org/mongo-driver/bson"
 )
-
 
 var (
 	// live database collections
@@ -27,16 +25,15 @@ var (
 // insertGTPLDataMongo inserts a GTPL device document
 // into the live Mongo DB. It essentially updates the documents in a
 // seperate collection which contains the latest state of the device.
-func insertGTPLDataMongo(gtplDevice *models.GTPLDevice, wg *sync.WaitGroup) {
-	defer wg.Done()
+func insertGTPLDataMongo(gtplDevice *models.GTPLDevice) {
 
 	if gtplDevice.DeviceID != "" {
 
 		// the live mongo db collection.
-		locationHistoriesCollection, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
+		locationHistoriesColl, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
 
 		// the updating mongo db collection
-		vehicleDetailsCollection, vctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
+		vehicleDetailsColl, vctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
 
 		// If the cursor has data, it means there are
 		// already documents of the device. So we only need to update.
@@ -52,7 +49,7 @@ func insertGTPLDataMongo(gtplDevice *models.GTPLDevice, wg *sync.WaitGroup) {
 
 			gtplDevice.GPSOdometer, _ = strconv.Atoi(o)
 
-			_, err := vehicleDetailsCollection.
+			_, err := vehicleDetailsColl.
 				UpdateOne(vctx, bson.M{"gps_device_id": gtplDevice.DeviceID},
 
 					bson.M{"$set": bson.M{"ignition_status": gtplDevice.IgnitionStatus,
@@ -75,25 +72,23 @@ func insertGTPLDataMongo(gtplDevice *models.GTPLDevice, wg *sync.WaitGroup) {
 		}
 
 		// Now insert in the live database. This doesn't have any conditions.
-		_, err := locationHistoriesCollection.InsertOne(locCtx, gtplDevice)
+		_, err := locationHistoriesColl.InsertOne(locCtx, gtplDevice)
 
 		insertFencingGTPL(gtplDevice)
-		calculateRunTime(gtplDevice.DeviceID)
+	//	calculateRunTime(gtplDevice.DeviceID)
 
 		errorcheck.CheckError(err)
 	}
 }
 
-func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device, wg *sync.WaitGroup) {
-	// the live mongo db collection.
-	defer wg.Done()
+func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device) {
 	// the live mongo db collection.
 	var distance float64
 
-	locationHistoriesCollection, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
+	locationHistoriesColl, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
 
 	// the updating mongo db collection
-	vehicleDetailsCollection, vctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
+	vehicleDetailsColl, vctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
 
 	if ais140Device.LiveOrHistoryPacket == "L" {
 
@@ -107,7 +102,7 @@ func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device, wg *sync.WaitG
 
 		ais140Device.GPSOdometer, _ = strconv.Atoi(o)
 
-		_, err := vehicleDetailsCollection.
+		_, err := vehicleDetailsColl.
 			UpdateOne(vctx, bson.M{"gps_device_id": ais140Device.IMEINumber},
 
 				bson.M{"$set": bson.M{"ignition_status": ais140Device.IgnitionStatus,
@@ -127,29 +122,28 @@ func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device, wg *sync.WaitG
 		errorcheck.CheckError(err)
 	}
 
-	_, err := locationHistoriesCollection.InsertOne(locCtx, ais140Device)
+	_, err := locationHistoriesColl.InsertOne(locCtx, ais140Device)
 
 	insertFencingAIS140(ais140Device)
 
-	calculateRunTime(ais140Device.IMEINumber)
+	//calculateRunTime(ais140Device.IMEINumber)
 
 	errorcheck.CheckError(err)
 }
 
-func insertBSTPLDataMongo(bstplDevice *models.BSTPLDevice, wg *sync.WaitGroup) {
+func insertBSTPLDataMongo(bstplDevice *models.BSTPLDevice) {
 
-	defer wg.Done()
 	var distance float64
 
 	if bstplDevice.VehicleID != "" {
 
 		// the live mongo db collection.
-		locationHistoriesCollection, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
+		locationHistoriesColl, locCtx := db.GetMongoCollectionWithContext(locationHistoriesCollection)
 
 		if bstplDevice.LiveOrHistoryPacket == "L" {
 
 			// the updating mongo db collection
-			vehicleDetailsCollection, vctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
+			vehicleDetailsColl, vctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
 
 			prevlat, prevlong, odometerValue := GetPrevLatLong(bstplDevice.VehicleID)
 			distance = utils.Distance(prevlat, prevlong, bstplDevice.Latitude, bstplDevice.Longitude)
@@ -159,7 +153,7 @@ func insertBSTPLDataMongo(bstplDevice *models.BSTPLDevice, wg *sync.WaitGroup) {
 
 			bstplDevice.GPSOdometer = odometerValue
 
-			_, err := vehicleDetailsCollection.
+			_, err := vehicleDetailsColl.
 				UpdateOne(vctx, bson.M{"gps_device_id": bstplDevice.VehicleID},
 
 					bson.M{"$set": bson.M{
@@ -182,10 +176,10 @@ func insertBSTPLDataMongo(bstplDevice *models.BSTPLDevice, wg *sync.WaitGroup) {
 			errorcheck.CheckError(err)
 		}
 
-		_, err := locationHistoriesCollection.InsertOne(locCtx, bstplDevice)
+		_, err := locationHistoriesColl.InsertOne(locCtx, bstplDevice)
 
 		insertFencingBSTPL(bstplDevice)
-		calculateRunTime(bstplDevice.VehicleID)
+		//calculateRunTime(bstplDevice.VehicleID)
 
 		errorcheck.CheckError(err)
 	}
@@ -193,9 +187,9 @@ func insertBSTPLDataMongo(bstplDevice *models.BSTPLDevice, wg *sync.WaitGroup) {
 
 func getVehicleRegNo(deviceID string) string {
 
-	vehicleDetailsCollection, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
+	vehicleDetailsColl, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
 
-	cursor, err := vehicleDetailsCollection.Find(ctx, bson.M{"gps_device_id": deviceID}, &options.FindOptions{
+	cursor, err := vehicleDetailsColl.Find(ctx, bson.M{"gps_device_id": deviceID}, &options.FindOptions{
 		Projection: bson.D {
 			{"vehicle_reg_no", 1},
 		},
@@ -203,23 +197,26 @@ func getVehicleRegNo(deviceID string) string {
 
 	var device Device
 
-	if cursor.Next(ctx); cursor.Err() == nil {
+	if cursor != nil {
+		for cursor.Next(ctx) {
 
-		err = cursor.Decode(&device)
+			err = cursor.Decode(&device)
 
-		if err != nil  {
-			log.Println(err)
+			if err != nil  {
+				log.Println(err)
+			}
 		}
 	}
 
 	return device.VehicleRegNo
+
 }
 
 func GetPrevLatLong(deviceID string) (float64, float64, float64) {
 
-	vehicleDetailsCollection, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
+	vehicleDetailsColl, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
 
-	cursor, err := vehicleDetailsCollection.Find(ctx, bson.M{"gps_device_id": deviceID}, &options.FindOptions{
+	cursor, err := vehicleDetailsColl.Find(ctx, bson.M{"gps_device_id": deviceID}, &options.FindOptions{
 		Projection: bson.D {
 			{"latitude", 1},
 			{"longitude", 1},
@@ -229,20 +226,21 @@ func GetPrevLatLong(deviceID string) (float64, float64, float64) {
 
 	var device latlong
 
-	if cursor.Next(ctx); cursor.Err() == nil {
+	if cursor != nil {
+		for cursor.Next(ctx) {
 
-		err = cursor.Decode(&device)
+			err = cursor.Decode(&device)
 
-		if err != nil  {
-			log.Println(err)
+			if err != nil  {
+				log.Println(err)
+			}
 		}
 	}
 
 	return device.Latitude, device.Longitude, device.GPSOdometer
 }
 
-func insertRawDataMongo(rawData string, wg *sync.WaitGroup) {
-	defer wg.Done()
+func insertRawDataMongo(rawData string) {
 
 	rawDataCollection, rctx := db.GetRawCollectionWithContext()
 
@@ -256,106 +254,122 @@ func insertRawDataMongo(rawData string, wg *sync.WaitGroup) {
 
 func insertFencingBSTPL(bstplDevice *models.BSTPLDevice) {
 
-	FenceDetailsCollection, ctx := db.GetMongoCollectionWithContext(FenceDetailsCollection)
+	if bstplDevice != nil {
 
-	// Get the lat, long and radius of the fence with fence id
-	cursor, err := FenceDetailsCollection.Find(ctx, bson.M{"gps_device_id": bstplDevice.VehicleID}, &options.FindOptions{
-		Projection: bson.D {
-			{"latitude", 1},
-			{"longitude", 1},
-			{"radius", 1},
-			{"gps_device_id", 1},
-		},
-	})
+		FenceDetailsColl, ctx := db.GetMongoCollectionWithContext(FenceDetailsCollection)
 
-	var deviceFence deviceFence
+		// Get the lat, long and radius of the fence with fence id
+		cursor, err := FenceDetailsColl.Find(ctx, bson.M{"gps_device_id": bstplDevice.VehicleID}, &options.FindOptions{
+			Projection: bson.D{
+				{"latitude", 1},
+				{"longitude", 1},
+				{"radius", 1},
+				{"gps_device_id", 1},
+			},
+		})
 
-	if cursor.Next(ctx); cursor.Err() == nil {
-		err = cursor.Decode(&deviceFence)
+		var deviceFence deviceFence
 
-		errorcheck.CheckError(err)
-	}
+		if cursor != nil {
+			for cursor.Next(ctx) {
+				err = cursor.Decode(&deviceFence)
 
-	deviceLat, deviceLong, _ := GetPrevLatLong(bstplDevice.VehicleID)
+				errorcheck.CheckError(err)
+			}
 
-	bstplDevice.GeoFenceID = 22
-	// if it is true, meaning the device reached the fence
-	if utils.GeoFence(deviceFence.Latitude, deviceFence.Longitude, deviceLat, deviceLong, float64(deviceFence.Radius)) {
-		bstplDevice.GeoFenceID = 33			// to Base
+			deviceLat, deviceLong, _ := GetPrevLatLong(bstplDevice.VehicleID)
+
+			bstplDevice.GeoFenceID = 22
+			// if it is true, meaning the device reached the fence
+			if utils.GeoFence(deviceFence.Latitude, deviceFence.Longitude, deviceLat, deviceLong, float64(deviceFence.Radius)) {
+				bstplDevice.GeoFenceID = 33 // to Base
+			}
+
+		}
 	}
 }
 
 func insertFencingGTPL(gtplDevice *models.GTPLDevice) {
 
-	FenceDetailsCollection, ctx := db.GetMongoCollectionWithContext(FenceDetailsCollection)
+	if gtplDevice != nil {
+		FenceDetailsColl, ctx := db.GetMongoCollectionWithContext(FenceDetailsCollection)
 
-	// Get the lat, long and radius of the fence with fence id
-	cursor, err := FenceDetailsCollection.Find(ctx, bson.M{"gps_device_id": gtplDevice.DeviceID}, &options.FindOptions{
-		Projection: bson.D {
-			{"latitude", 1},
-			{"longitude", 1},
-			{"radius", 1},
-			{"gps_device_id", 1},
-		},
-	})
+		// Get the lat, long and radius of the fence with fence id
+		cursor, err := FenceDetailsColl.Find(ctx, bson.M{"gps_device_id": gtplDevice.DeviceID}, &options.FindOptions{
+			Projection: bson.D{
+				{"latitude", 1},
+				{"longitude", 1},
+				{"radius", 1},
+				{"gps_device_id", 1},
+			},
+		})
 
-	var deviceFence deviceFence
+		var deviceFence deviceFence
 
-	if cursor.Next(ctx); cursor.Err() == nil  {
-		err = cursor.Decode(&deviceFence)
+		if cursor != nil {
+			for cursor.Next(ctx) {
+				err = cursor.Decode(&deviceFence)
 
-		if err != nil  {
-			log.Println(err)
+				if err != nil {
+					log.Println(err)
+				}
+			}
+
+			deviceLat, deviceLong, _ := GetPrevLatLong(gtplDevice.DeviceID)
+
+			gtplDevice.GeoFenceID = 22
+			// if it is true, meaning the device reached the fence
+			if utils.GeoFence(deviceFence.Latitude, deviceFence.Longitude, deviceLat, deviceLong, float64(deviceFence.Radius)) {
+				gtplDevice.GeoFenceID = 33 // to Base
+			}
+
 		}
-	}
-
-	deviceLat, deviceLong, _ := GetPrevLatLong(gtplDevice.DeviceID)
-
-	gtplDevice.GeoFenceID = 22
-	// if it is true, meaning the device reached the fence
-	if utils.GeoFence(deviceFence.Latitude, deviceFence.Longitude, deviceLat, deviceLong, float64(deviceFence.Radius)) {
-		gtplDevice.GeoFenceID = 33			// to Base
 	}
 }
 
 func insertFencingAIS140(ais140Device *models.AIS140Device) {
 
-	FenceDetailsCollection, ctx := db.GetMongoCollectionWithContext(FenceDetailsCollection)
+	if ais140Device != nil {
 
-	// Get the lat, long and radius of the fence with fence id
-	cursor, err := FenceDetailsCollection.Find(ctx, bson.M{"gps_device_id": ais140Device.IMEINumber}, &options.FindOptions{
-		Projection: bson.D {
-			{"latitude", 1},
-			{"longitude", 1},
-			{"radius", 1},
-			{"gps_device_id", 1},
-		},
-	})
+		FenceDetailsColl, ctx := db.GetMongoCollectionWithContext(FenceDetailsCollection)
 
-	var deviceFence deviceFence
+		// Get the lat, long and radius of the fence with fence id
+		cursor, err := FenceDetailsColl.Find(ctx, bson.M{"gps_device_id": ais140Device.IMEINumber}, &options.FindOptions{
+			Projection: bson.D {
+				{"latitude", 1},
+				{"longitude", 1},
+				{"radius", 1},
+				{"gps_device_id", 1},
+			},
+		})
 
-	if cursor.Next(ctx); cursor.Err() == nil {
-		err = cursor.Decode(&deviceFence)
+		var deviceFence deviceFence
 
-		if err != nil  {
-			log.Println(err)
+		if cursor != nil {
+			for cursor.Next(ctx) {
+				err = cursor.Decode(&deviceFence)
+
+				if err != nil  {
+					log.Println(err)
+				}
+			}
+
+			deviceLat, deviceLong, _ := GetPrevLatLong(ais140Device.IMEINumber)
+
+			ais140Device.GeoFenceID = 22
+
+			// if it is true, meaning the device reached the fence
+			if utils.GeoFence(deviceFence.Latitude, deviceFence.Longitude, deviceLat, deviceLong, float64(deviceFence.Radius)) {
+				ais140Device.GeoFenceID = 33			// to Base
+			}
 		}
-	}
-
-	deviceLat, deviceLong, _ := GetPrevLatLong(ais140Device.IMEINumber)
-
-	ais140Device.GeoFenceID = 22
-
-	// if it is true, meaning the device reached the fence
-	if utils.GeoFence(deviceFence.Latitude, deviceFence.Longitude, deviceLat, deviceLong, float64(deviceFence.Radius)) {
-		ais140Device.GeoFenceID = 33			// to Base
 	}
 }
 
 func calculateRunTime(deviceID string) {
-	vehicleDetailsCollection, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
+	vehicleDetailsColl, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
 
-	cursor, err := vehicleDetailsCollection.Find(ctx, bson.M{"gps_device_id": deviceID}, &options.FindOptions{
+	cursor, err := vehicleDetailsColl.Find(ctx, bson.M{"gps_device_id": deviceID}, &options.FindOptions{
 		Projection: bson.D {
 			{"device_time", 1},
 		},
@@ -363,16 +377,16 @@ func calculateRunTime(deviceID string) {
 
 	var device Dt
 
-	if cursor.Next(ctx) {
+	if cursor != nil {
+		for cursor.Next(ctx) {
 
-		err = cursor.Decode(&device)
+			err = cursor.Decode(&device)
 
-		if err != nil  {
-			log.Println(err)
+			if err != nil  {
+				log.Println(err)
+			}
 		}
 	}
-
-	fmt.Println(device.DeviceTime)
 }
 
 type deviceFence struct {

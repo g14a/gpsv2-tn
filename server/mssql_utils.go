@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
 	"gitlab.com/gpsv2-withoutrm/models"
@@ -121,8 +120,7 @@ func ParseMSSQLDeviceFromBSTPL(device models.BSTPLDevice) models.MSSQLDevice {
 }
 
 // Insert into
-func InsertIntoMSSQL(device models.MSSQLDevice, wg *sync.WaitGroup) {
-	defer wg.Done()
+func InsertIntoMSSQL(device models.MSSQLDevice) {
 
 	if device.LiveHistory == "L" {
 		ignition := 0

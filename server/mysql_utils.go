@@ -1,17 +1,15 @@
 	package server
 
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"gitlab.com/gpsv2-withoutrm/errorcheck"
-	"gitlab.com/gpsv2-withoutrm/models"
-	"net/http"
-	"sync"
-)
+	import (
+		"bytes"
+		"encoding/json"
+		"fmt"
+		"gitlab.com/gpsv2-withoutrm/errorcheck"
+		"gitlab.com/gpsv2-withoutrm/models"
+		"net/http"
+	)
 
-func insertGTPLIntoSQL(sqlDevice models.GTPLSQLModel, wg *sync.WaitGroup) {
-	defer wg.Done()
+func insertGTPLIntoSQL(sqlDevice models.GTPLSQLModel) {
 
 	fixTime := sqlDevice.Fixtime.Format("2006-01-02 15:04:05")
 	recvTime := sqlDevice.CreateDate.Format("2006-01-02 15:04:05")
@@ -60,9 +58,7 @@ func insertGTPLIntoSQL(sqlDevice models.GTPLSQLModel, wg *sync.WaitGroup) {
 	upreq.Close = true
 }
 
-func insertAIS140IntoSQL(sqlDevice models.AIS140SQLModel, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func insertAIS140IntoSQL(sqlDevice models.AIS140SQLModel) {
 	fixTime := sqlDevice.FixTime.Format("2006-01-02 15:04:05")
 	recvTime := sqlDevice.CreateDate.Format("2006-01-02 15:04:05")
 
@@ -120,8 +116,7 @@ func insertAIS140IntoSQL(sqlDevice models.AIS140SQLModel, wg *sync.WaitGroup) {
 	upreq.Close = true
 }
 
-func insertBSTPLIntoSQL(sqlDevice models.BSTPLSQLModel, wg *sync.WaitGroup) {
-	defer wg.Done()
+func insertBSTPLIntoSQL(sqlDevice models.BSTPLSQLModel) {
 
 	fixTime := sqlDevice.Fixtime.Format("2006-01-02 15:04:05")
 	recvTime := sqlDevice.CreateDate.Format("2006-01-02 15:04:05")
@@ -171,4 +166,3 @@ func insertBSTPLIntoSQL(sqlDevice models.BSTPLSQLModel, wg *sync.WaitGroup) {
 
 	errorcheck.CheckError(err)
 }
-

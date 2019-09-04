@@ -24,7 +24,6 @@ func StartServer() {
 	errorcheck.CheckError(err)
 
 	defer ln.Close()
-	go signalHandler()
 
 	log.Println("[SERVER] listening...")
 

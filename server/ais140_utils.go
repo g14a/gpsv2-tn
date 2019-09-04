@@ -59,11 +59,6 @@ func ParseAIS140Data(rawData string) models.AIS140Device {
 			ais140Device.EmergencyStatus = csvarray[27]
 			ais140Device.TamperAlert = csvarray[28]
 			ais140Device.GSMStrength, _ = strconv.Atoi(csvarray[29])
-			ais140Device.MCC, _ = strconv.Atoi(csvarray[30])
-			ais140Device.MNC, _ = strconv.Atoi(csvarray[31])
-			ais140Device.LAC, _ = strconv.Atoi(csvarray[32])
-			ais140Device.CellID = csvarray[33]
-			ais140Device.NMR = csvarray[34]
 			ais140Device.DigitalInputStatus = csvarray[35]
 			ais140Device.DigitalOutputStatus = csvarray[36]
 			ais140Device.SequenceNumber = csvarray[37]

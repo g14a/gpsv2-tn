@@ -26,8 +26,6 @@ type AIS140Device struct {
 	Heading                int		`bson:"heading"`
 	NumberOfSatellites     int		`bson:"no_of_satellites"`
 	AltitudeInMetres       int		`bson:"altitude"`
-	PDOP                   float64	`bson:"pdop"`
-	HDOP                   float64	`bson:"hdop"`
 	NetworkOperator        string	`bson:"network_operator_name"`
 	IgnitionStatus         bool		`bson:"ignition_status"`
 	VehicleBatteryStatus   int		`bson:"vehicle_btry_status"`
@@ -36,11 +34,7 @@ type AIS140Device struct {
 	EmergencyStatus        string	`bson:"emergency_status"`
 	TamperAlert            string	`bson:"tamper_alert"`
 	GSMStrength            int		`bson:"gsm_signal_strength"`
-	MCC                    int
-	MNC                    int
-	LAC                    int
-	CellID                 string
-	NMR                    string
+
 	DigitalInputStatus     string	`bson:"digital_input_status"`
 	DigitalOutputStatus    string	`bson:"digital_output_status"`
 	SequenceNumber         string	`bson:"sequence_number_message"`
