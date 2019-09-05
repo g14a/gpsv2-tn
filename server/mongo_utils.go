@@ -2,24 +2,25 @@ package server
 
 import (
 	"fmt"
-	"gitlab.com/gpsv2-withoutrm/utils"
+	"gitlab.com/gpsv2-tn/utils"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"strconv"
 	"time"
 
-	"gitlab.com/gpsv2-withoutrm/config"
-	"gitlab.com/gpsv2-withoutrm/db"
-	"gitlab.com/gpsv2-withoutrm/errorcheck"
-	"gitlab.com/gpsv2-withoutrm/models"
+	"gitlab.com/gpsv2-tn/config"
+	"gitlab.com/gpsv2-tn/db"
+	"gitlab.com/gpsv2-tn/errorcheck"
+	"gitlab.com/gpsv2-tn/models"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 var (
 	// live database collections
-	locationHistoriesCollection = config.GetAppConfig().Mongoconfig.Collections.LocationHistoriesCollection
-	vehicleDetailsCollection    = config.GetAppConfig().Mongoconfig.Collections.VehicleDetailsCollection
-	FenceDetailsCollection = config.GetAppConfig().Mongoconfig.Collections.FenceDetailsCollection
+	locationHistoriesCollection= config.GetAppConfig().Mongoconfig.Collections.LocationHistoriesCollection
+	vehicleDetailsCollection   = config.GetAppConfig().Mongoconfig.Collections.VehicleDetailsCollection
+	FenceDetailsCollection     = config.GetAppConfig().Mongoconfig.Collections.FenceDetailsCollection
+	loc, _                     = time.LoadLocation("Asia/Kolkata")
 )
 
 // insertGTPLDataMongo inserts a GTPL device document
@@ -75,7 +76,7 @@ func insertGTPLDataMongo(gtplDevice *models.GTPLDevice) {
 		_, err := locationHistoriesColl.InsertOne(locCtx, gtplDevice)
 
 		insertFencingGTPL(gtplDevice)
-	//	calculateRunTime(gtplDevice.DeviceID)
+		calculateRunTime(gtplDevice.DeviceID)
 
 		errorcheck.CheckError(err)
 	}
@@ -126,7 +127,7 @@ func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device) {
 
 	insertFencingAIS140(ais140Device)
 
-	//calculateRunTime(ais140Device.IMEINumber)
+	calculateRunTime(ais140Device.IMEINumber)
 
 	errorcheck.CheckError(err)
 }
@@ -174,12 +175,12 @@ func insertBSTPLDataMongo(bstplDevice *models.BSTPLDevice) {
 					}})
 
 			errorcheck.CheckError(err)
+
 		}
 
 		_, err := locationHistoriesColl.InsertOne(locCtx, bstplDevice)
 
 		insertFencingBSTPL(bstplDevice)
-		//calculateRunTime(bstplDevice.VehicleID)
 
 		errorcheck.CheckError(err)
 	}
@@ -366,7 +367,7 @@ func insertFencingAIS140(ais140Device *models.AIS140Device) {
 	}
 }
 
-func calculateRunTime(deviceID string) {
+func calculateRunTime(deviceID string) time.Time {
 	vehicleDetailsColl, ctx := db.GetMongoCollectionWithContext(vehicleDetailsCollection)
 
 	cursor, err := vehicleDetailsColl.Find(ctx, bson.M{"gps_device_id": deviceID}, &options.FindOptions{
@@ -376,6 +377,7 @@ func calculateRunTime(deviceID string) {
 	})
 
 	var device Dt
+	var deviceTime time.Time
 
 	if cursor != nil {
 		for cursor.Next(ctx) {
@@ -385,8 +387,14 @@ func calculateRunTime(deviceID string) {
 			if err != nil  {
 				log.Println(err)
 			}
+
+			deviceTime = device.DeviceTime.In(loc)
+
+			fmt.Println(deviceTime)
 		}
 	}
+
+	return deviceTime
 }
 
 type deviceFence struct {

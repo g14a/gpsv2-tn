@@ -2,17 +2,13 @@ package server
 
 import (
 	"fmt"
-	"gitlab.com/gpsv2-withoutrm/models"
+	"gitlab.com/gpsv2-tn/models"
 	"io"
-	"log"
 	"net"
-	"os"
-	"os/signal"
 	"runtime"
 	"strings"
 	"time"
 )
-
 
 // HandleConnection handles a connection by firing
 // up a seperate go routine for a TCP connection net.Conn
@@ -140,23 +136,4 @@ func processAIS140Device(record string) {
 		insertAIS140IntoSQL(mysqlDevice)
 		insertRawDataMongo(record)
 	}
-}
-
-// signalHandler notices termination signals or
-// interrupts from the command line. Eg: ctrl-c and exits cleanly
-func signalHandler() {
-	sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan, os.Interrupt)
-
-	go func() {
-		for sig := range sigchan {
-			log.Printf("[SERVER] Closing due to Signal: %s", sig)
-			log.Printf("[SERVER] Graceful shutdown")
-
-			fmt.Println("Done.")
-
-			// Exit cleanly
-			os.Exit(0)
-		}
-	}()
 }

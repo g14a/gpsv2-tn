@@ -4,8 +4,8 @@
 		"bytes"
 		"encoding/json"
 		"fmt"
-		"gitlab.com/gpsv2-withoutrm/errorcheck"
-		"gitlab.com/gpsv2-withoutrm/models"
+		"gitlab.com/gpsv2-tn/errorcheck"
+		"gitlab.com/gpsv2-tn/models"
 		"net/http"
 	)
 

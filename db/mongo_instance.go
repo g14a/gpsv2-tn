@@ -4,8 +4,8 @@ package db
 
 import (
 	"context"
-	"gitlab.com/gpsv2-withoutrm/config"
-	"gitlab.com/gpsv2-withoutrm/errorcheck"
+	"gitlab.com/gpsv2-tn/config"
+	"gitlab.com/gpsv2-tn/errorcheck"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"sync"

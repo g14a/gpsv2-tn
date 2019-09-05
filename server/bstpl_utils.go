@@ -2,9 +2,9 @@ package server
 
 import (
 	"encoding/csv"
-	"gitlab.com/gpsv2-withoutrm/errorcheck"
-	"gitlab.com/gpsv2-withoutrm/models"
-	"gitlab.com/gpsv2-withoutrm/utils"
+	"gitlab.com/gpsv2-tn/errorcheck"
+	"gitlab.com/gpsv2-tn/models"
+	"gitlab.com/gpsv2-tn/utils"
 	"strconv"
 	"strings"
 	"time"

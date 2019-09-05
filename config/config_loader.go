@@ -1,7 +1,7 @@
 package config
 
 import (
-	"gitlab.com/gpsv2-withoutrm/errorcheck"
+	"gitlab.com/gpsv2-tn/errorcheck"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"sync"
@@ -22,7 +22,7 @@ func GetAppConfig() *AppConfig {
 // loadConfig loads the data in the yaml file into a struct
 // returns the app instance once if it is ready
 func loadConfig() {
-	yamlFile, err := ioutil.ReadFile("/root/gpsv2-withoutrm/config.yml")
+	yamlFile, err := ioutil.ReadFile("/root/gpsv2-tn/config.yml")
 
 	errorcheck.CheckError(err)
 
