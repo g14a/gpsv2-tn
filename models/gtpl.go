@@ -44,5 +44,5 @@ type GTPLDevice struct {
 	Port 	   int					`bson:"port"`
 	StartTime	time.Time 			`bson:"start_time"`
 	EndTime		time.Time			`bson:"end_time"`
-	RunTime 		  int 			`bson:"run_time"`
+	RunTime 	string	`bson:"run_time"`
 }

@@ -13,9 +13,10 @@ import (
 // HandleConnection handles a connection by firing
 // up a seperate go routine for a TCP connection net.Conn
 
-// readTCPClient reads data sent by the device(a TCP client)
-// and pushes it to the DB in an overview. Read more documentation below
 func HandleConnection(conn net.Conn) {
+
+	startTime := time.Now()
+	fmt.Println("start time -> ", startTime)
 
 	fmt.Println(runtime.NumGoroutine(), " goroutines and ", count, " clients connected")
 
@@ -26,6 +27,7 @@ func HandleConnection(conn net.Conn) {
 
 		// if an error occurs deal with it
 		if err != nil {
+			fmt.Println(err.Error())
 			if err == io.EOF {
 				fmt.Println("Connection closed EOF")
 				_ = conn.Close()
@@ -39,28 +41,28 @@ func HandleConnection(conn net.Conn) {
 				dataslice := strings.Split(string(buf), "#")
 
 				for _, record := range dataslice {
-					processBSTPLDevices(record)
+					processBSTPLDevices(record, startTime)
 				}
 
 			} else if strings.Contains(buffer, "GTPL") {
 				dataslice := strings.Split(string(buf), "#")
 
 				for _, record := range dataslice {
-					processGTPLDevices(record)
+					processGTPLDevices(record, startTime)
 				}
 
 			} else if strings.Contains(buffer, "AVA") {
 				dataslice := strings.Split(string(buf), "*")
 
 				for _, record := range dataslice {
-					processAIS140Device(record)
+					processAIS140Device(record, startTime)
 				}
 			}
 		}
 	}
 }
 
-func processGTPLDevices(record string) {
+func processGTPLDevices(record string, startTime time.Time) {
 
 	var (
 		gtplDevice  models.GTPLDevice
@@ -78,7 +80,7 @@ func processGTPLDevices(record string) {
 		gtplDevice.Distance = mysqlDevice.DistanceTravelled
 
 		InsertIntoMSSQL(mssqlDevice)
-		insertGTPLDataMongo(&gtplDevice)
+		insertGTPLDataMongo(&gtplDevice, startTime)
 
 		mysqlDevice = ParseGTPLDataSQL(gtplDevice)
 
@@ -87,7 +89,7 @@ func processGTPLDevices(record string) {
 	}
 }
 
-func processBSTPLDevices(record string) {
+func processBSTPLDevices(record string, startTime time.Time) {
 
 	var (
 		bstplDevice models.BSTPLDevice
@@ -101,7 +103,7 @@ func processBSTPLDevices(record string) {
 
 		recvTime := time.Now()
 
-		insertBSTPLDataMongo(&bstplDevice)
+		insertBSTPLDataMongo(&bstplDevice, startTime)
 		mssqlDevice = ParseMSSQLDeviceFromBSTPL(bstplDevice)
 		mssqlDevice.RecvTime = recvTime
 
@@ -114,7 +116,7 @@ func processBSTPLDevices(record string) {
 	}
 }
 
-func processAIS140Device(record string) {
+func processAIS140Device(record string, startTime time.Time) {
 
 	var (
 		ais140Device  models.AIS140Device
@@ -130,7 +132,7 @@ func processAIS140Device(record string) {
 		mssqlDevice = ParseMSSQLDeviceFromAIS140(ais140Device)
 
 		InsertIntoMSSQL(mssqlDevice)
-		insertAIS140DataIntoMongo(&ais140Device)
+		insertAIS140DataIntoMongo(&ais140Device, startTime)
 
 		mysqlDevice = ParseAIS140DataSQL(ais140Device)
 		insertAIS140IntoSQL(mysqlDevice)
