@@ -16,7 +16,6 @@ import (
 func HandleConnection(conn net.Conn) {
 
 	startTime := time.Now()
-	fmt.Println("start time -> ", startTime)
 
 	fmt.Println(runtime.NumGoroutine(), " goroutines and ", count, " clients connected")
 
@@ -81,7 +80,6 @@ func processGTPLDevices(record string, startTime time.Time) {
 
 		InsertIntoMSSQL(mssqlDevice)
 		insertGTPLDataMongo(&gtplDevice, startTime)
-
 		mysqlDevice = ParseGTPLDataSQL(gtplDevice)
 
 		insertGTPLIntoSQL(mysqlDevice)

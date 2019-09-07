@@ -42,7 +42,7 @@ type GTPLDevice struct {
 	GeoFenceID int64 				`bson:"geo_code"`
 	ButtonCode int64				`bson:"button_code"`
 	Port 	   int					`bson:"port"`
-	StartTime	time.Time 			`bson:"start_time"`
-	EndTime		time.Time			`bson:"end_time"`
-	RunTime 	string	`bson:"run_time"`
+	StartTime	time.Time 			`bson:"start_time,omitempty"`
+	EndTime		time.Time			`bson:"end_time,omitempty"`
+	RunTime 	int64				`bson:"run_time,omitempty"`
 }

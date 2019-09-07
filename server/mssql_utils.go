@@ -29,7 +29,7 @@ func ParseMSSQLDeviceFromGTPL(device models.GTPLDevice) models.MSSQLDevice {
 	var mssqlDevice models.MSSQLDevice
 
 	mssqlDevice.SentTime = device.CreatedTime
-	mssqlDevice.RecvTime = device.DeviceTime
+	mssqlDevice.RecvTime = time.Now()
 
 	vehicleNumber := getVehicleRegNo(device.DeviceID)
 
@@ -59,6 +59,9 @@ func ParseMSSQLDeviceFromAIS140(device models.AIS140Device) models.MSSQLDevice {
 
 	vehicleNumber := getVehicleRegNo(device.IMEINumber)
 
+	mssqlDevice.SentTime = device.CreatedTime
+	mssqlDevice.RecvTime = time.Now()
+
 	mssqlDevice.ButtonCode = strconv.Itoa(int(device.ButtonCode))
 	mssqlDevice.Geofence = device.GeoFenceID
 	mssqlDevice.LiveHistory = device.LiveOrHistoryPacket
@@ -74,8 +77,6 @@ func ParseMSSQLDeviceFromAIS140(device models.AIS140Device) models.MSSQLDevice {
 
 	mssqlDevice.InternalBattery, _ = strconv.Atoi(i)
 
-	mssqlDevice.SentTime = device.CreatedTime
-	mssqlDevice.RecvTime = device.DeviceTime
 	mssqlDevice.Orientation = device.Heading
 	mssqlDevice.SimID = device.IMEINumber
 	mssqlDevice.Geofence = 0
@@ -87,8 +88,9 @@ func ParseMSSQLDeviceFromBSTPL(device models.BSTPLDevice) models.MSSQLDevice {
 
 	var mssqlDevice models.MSSQLDevice
 
-	mssqlDevice.RecvTime = device.DeviceTime
 	mssqlDevice.SentTime = device.CreatedTime
+	mssqlDevice.RecvTime = time.Now()
+
 	mssqlDevice.LiveHistory = device.LiveOrHistoryPacket
 
 	vehicleNumber := getVehicleRegNo(device.VehicleID)
@@ -116,10 +118,8 @@ func ParseMSSQLDeviceFromBSTPL(device models.BSTPLDevice) models.MSSQLDevice {
 	mssqlDevice.SimID = device.VehicleID
 
 	return mssqlDevice
-
 }
 
-// Insert into
 func InsertIntoMSSQL(device models.MSSQLDevice) {
 
 	if device.LiveHistory == "L" {

@@ -8,7 +8,7 @@ import "time"
 
 type AIS140Device struct {
 	Header                 string
-	VendorIdentification   string	`bson:""`
+	VendorIdentification   string
 	SoftwareVersion        string
 	PacketType             string	`bson:"packate_type"`
 	PacketIdentification   string	`bson:"packate_identifier"`
@@ -16,7 +16,7 @@ type AIS140Device struct {
 	IMEINumber             string	`bson:"gps_device_id"`
 	VehicleRegNumber       string	`bson:"vehicle_reg_number"`
 	GPSFix                 string	`bson:"gps_fix"`
-	DateInDDMMYYYY         string	`bson:""`
+	DateInDDMMYYYY         string
 	TimeInHHMMSS           string
 	Latitude               float64	`bson:"latitude"`
 	LatitudeDirection 	   string	`bson:"lat_direction"`
@@ -48,7 +48,7 @@ type AIS140Device struct {
 	GeoFenceID 		  int64			`bson:"geo_code"`
 	GPSOdometer 	  int			`bson:"gps_odometer"`
 	Port 			  int 			`bson:"port"`
-	StartTime 		  time.Time		`bson:"start_time"`
-	EndTime			  time.Time		`bson:"end_time"`
-	RunTime 		  string 			`bson:"run_time"`
+	StartTime 		  time.Time		`bson:"start_time,omitempty"`
+	EndTime			  time.Time		`bson:"end_time,omitempty"`
+	RunTime 		  int64 		`bson:"run_time,omitempty"`
 }
