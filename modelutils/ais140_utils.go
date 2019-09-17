@@ -1,7 +1,8 @@
-package server
+package modelutils
 
 import (
 	"encoding/csv"
+	"gitlab.com/gpsv2-tn/config"
 	"gitlab.com/gpsv2-tn/errorcheck"
 	"gitlab.com/gpsv2-tn/models"
 	"gitlab.com/gpsv2-tn/utils"
@@ -74,7 +75,7 @@ func ParseAIS140Data(rawData string) models.AIS140Device {
 				ais140Device.ButtonCode = 99
 			}
 
-			ais140Device.Port = 7788
+			ais140Device.Port, _ = strconv.Atoi(config.GetAppConfig().TCPSocketConfig.Port)
 		}
 	}
 

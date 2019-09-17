@@ -1,7 +1,8 @@
-package server
+package modelutils
 
 import (
 	"encoding/csv"
+	"gitlab.com/gpsv2-tn/config"
 	"gitlab.com/gpsv2-tn/errorcheck"
 	"gitlab.com/gpsv2-tn/models"
 	"gitlab.com/gpsv2-tn/utils"
@@ -11,7 +12,7 @@ import (
 )
 
 // ParseGTPLData parses the raw data sent
-// by the GTPL device and marshals into a GTPL device model
+// by the GTPL device and marshals into a GTPL device model and returns the model
 func ParseBSTPLData(rawData string) models.BSTPLDevice {
 	var bstplDevice models.BSTPLDevice
 
@@ -49,10 +50,10 @@ func ParseBSTPLData(rawData string) models.BSTPLDevice {
 			bstplDevice.GSMSignal, _ = strconv.Atoi(csvArray[14])
 			bstplDevice.MainBatteryStatus, _ = strconv.Atoi(csvArray[15])
 
-			bstplDevice.DigitalInputStatus = 1
+			bstplDevice.DigitalInputStatus = true
 
 			if csvArray[16] == "0" {
-				bstplDevice.DigitalInputStatus = 0
+				bstplDevice.DigitalInputStatus = false
 			}
 
 			bstplDevice.AnalogInput, _ = strconv.ParseFloat(csvArray[17], 10)
@@ -64,7 +65,7 @@ func ParseBSTPLData(rawData string) models.BSTPLDevice {
 				bstplDevice.ButtonCode = 99
 			}
 
-			bstplDevice.Port = 7788
+			bstplDevice.Port, _ = strconv.Atoi(config.GetAppConfig().TCPSocketConfig.Port)
 		}
 	}
 

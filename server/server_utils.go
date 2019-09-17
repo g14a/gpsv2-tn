@@ -2,22 +2,20 @@ package server
 
 import (
 	"fmt"
+	"gitlab.com/gpsv2-tn/dbutils"
 	"gitlab.com/gpsv2-tn/models"
+	"gitlab.com/gpsv2-tn/modelutils"
 	"io"
 	"net"
-	"runtime"
 	"strings"
 	"time"
 )
 
 // HandleConnection handles a connection by firing
 // up a seperate go routine for a TCP connection net.Conn
-
 func HandleConnection(conn net.Conn) {
 
 	startTime := time.Now()
-
-	fmt.Println(runtime.NumGoroutine(), " goroutines and ", count, " clients connected")
 
 	for {
 		// Initialize a buffer of 5KB to be read from the client and read using conn.Read
@@ -43,6 +41,8 @@ func HandleConnection(conn net.Conn) {
 					processBSTPLDevices(record, startTime)
 				}
 
+				dataslice = nil
+
 			} else if strings.Contains(buffer, "GTPL") {
 				dataslice := strings.Split(string(buf), "#")
 
@@ -50,12 +50,16 @@ func HandleConnection(conn net.Conn) {
 					processGTPLDevices(record, startTime)
 				}
 
+				dataslice = nil
+
 			} else if strings.Contains(buffer, "AVA") {
 				dataslice := strings.Split(string(buf), "*")
 
 				for _, record := range dataslice {
 					processAIS140Device(record, startTime)
 				}
+
+				dataslice = nil
 			}
 		}
 	}
@@ -69,21 +73,23 @@ func processGTPLDevices(record string, startTime time.Time) {
 		mssqlDevice models.MSSQLDevice
 	)
 
-	gtplDevice = ParseGTPLData(record)
+	gtplDevice = modelutils.ParseGTPLData(record)
 
 	// ignores if an empty data occurs
 	if gtplDevice.Latitude != 0 && gtplDevice.Longitude != 0 && gtplDevice.DeviceID != "" {
 
-		mssqlDevice = ParseMSSQLDeviceFromGTPL(gtplDevice)
+		fmt.Println(gtplDevice)
+
+		mssqlDevice = dbutils.ParseMSSQLDeviceFromGTPL(gtplDevice)
 
 		gtplDevice.Distance = mysqlDevice.DistanceTravelled
 
-		InsertIntoMSSQL(mssqlDevice)
-		insertGTPLDataMongo(&gtplDevice, startTime)
-		mysqlDevice = ParseGTPLDataSQL(gtplDevice)
+		dbutils.InsertIntoMSSQL(mssqlDevice)
+		dbutils.InsertGTPLDataMongo(&gtplDevice, startTime)
+		mysqlDevice = modelutils.ParseGTPLDataSQL(gtplDevice)
 
-		insertGTPLIntoSQL(mysqlDevice)
-		insertRawDataMongo(record)
+		dbutils.InsertGTPLIntoSQL(mysqlDevice)
+		dbutils.InsertRawDataMongo(record)
 	}
 }
 
@@ -95,23 +101,26 @@ func processBSTPLDevices(record string, startTime time.Time) {
 		mysqlDevice models.BSTPLSQLModel
 	)
 
-	bstplDevice = ParseBSTPLData(record)
+	bstplDevice = modelutils.ParseBSTPLData(record)
 
 	if bstplDevice.Latitude != 0 && bstplDevice.Longitude != 0 && bstplDevice.VehicleID != "" {
 
+		fmt.Println(bstplDevice)
+
 		recvTime := time.Now()
 
-		insertBSTPLDataMongo(&bstplDevice, startTime)
-		mssqlDevice = ParseMSSQLDeviceFromBSTPL(bstplDevice)
+		dbutils.InsertBSTPLDataMongo(&bstplDevice, startTime)
+		mssqlDevice = dbutils.ParseMSSQLDeviceFromBSTPL(bstplDevice)
 		mssqlDevice.RecvTime = recvTime
 
-		InsertIntoMSSQL(mssqlDevice)
-		mysqlDevice = ParseBSTPLDataSQL(bstplDevice)
+		dbutils.InsertIntoMSSQL(mssqlDevice)
+		mysqlDevice = modelutils.ParseBSTPLDataSQL(bstplDevice)
 
-		insertBSTPLIntoSQL(mysqlDevice)
-		insertRawDataMongo(record)
+		dbutils.InsertBSTPLIntoSQL(mysqlDevice)
+		dbutils.InsertRawDataMongo(record)
 
 	}
+
 }
 
 func processAIS140Device(record string, startTime time.Time) {
@@ -122,18 +131,20 @@ func processAIS140Device(record string, startTime time.Time) {
 		mssqlDevice models.MSSQLDevice
 	)
 
-	ais140Device = ParseAIS140Data(record)
+	ais140Device = modelutils.ParseAIS140Data(record)
 
 	// ignores if an empty data occurs
 	if ais140Device.Latitude != 0 && ais140Device.Longitude != 0 && ais140Device.IMEINumber != "" {
 
-		mssqlDevice = ParseMSSQLDeviceFromAIS140(ais140Device)
+		fmt.Println(ais140Device)
 
-		InsertIntoMSSQL(mssqlDevice)
-		insertAIS140DataIntoMongo(&ais140Device, startTime)
+		mssqlDevice = dbutils.ParseMSSQLDeviceFromAIS140(ais140Device)
 
-		mysqlDevice = ParseAIS140DataSQL(ais140Device)
-		insertAIS140IntoSQL(mysqlDevice)
-		insertRawDataMongo(record)
+		dbutils.InsertIntoMSSQL(mssqlDevice)
+		dbutils.InsertAIS140DataIntoMongo(&ais140Device, startTime)
+
+		mysqlDevice = modelutils.ParseAIS140DataSQL(ais140Device)
+		dbutils.InsertAIS140IntoSQL(mysqlDevice)
+		dbutils.InsertRawDataMongo(record)
 	}
 }

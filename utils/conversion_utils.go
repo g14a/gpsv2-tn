@@ -6,10 +6,8 @@ import (
 	"time"
 )
 
-// ConvertToUnixTS converts time sent by the device(either AIS140 or GTPL)
-// to a UNIX timestamp. Do not tamper this. Timezone manipulation is complex
-
-
+// ConvertTimeGTPL converts raw data and time coming from a GTPL device
+// to a standard Golang time.Time object. rawData and rawTime contains 6 characters each.
 func ConvertTimeGTPL(rawDate, rawTime string) time.Time {
 	var istTime time.Time
 
@@ -28,6 +26,8 @@ func ConvertTimeGTPL(rawDate, rawTime string) time.Time {
 	return istTime
 }
 
+// ConvertTimeBSTPL converts raw data and time coming from a BSTPL device
+// to a standard Golang time.Time object. rawData and rawTime contains 6 characters each.
 func ConvertTimeBSTPL(rawDate, rawTime string) time.Time {
 	var istTime time.Time
 
@@ -46,6 +46,8 @@ func ConvertTimeBSTPL(rawDate, rawTime string) time.Time {
 	return istTime
 }
 
+// ConvertTimeAIS140 converts raw data and time coming from a AIS140 device
+// to a standard Golang time.Time object. rawData and rawTime contains 8 characters and 6 characters respectively.
 func ConvertTimeAIS140(rawDate, rawTime string) time.Time {
 	var istTime time.Time
 
@@ -63,13 +65,16 @@ func ConvertTimeAIS140(rawDate, rawTime string) time.Time {
 	return istTime
 }
 
+// Add5Hrs adds 5 hrs and 30 minutes to deviceTime and returns the added time.
 func Add5Hrs(deviceTime time.Time) time.Time {
 	istTime := deviceTime.Add(time.Hour*5 + time.Minute*30)
 
 	return istTime
 }
 
-// Return true if live
+
+// GTPLCheckLiveHistory checks if the GTPL device time is a live packet
+// by having a 60 second boundary.
 func GTPLCheckLiveHistory(istTime time.Time) bool {
 	difference := time.Now().Sub(istTime)
 

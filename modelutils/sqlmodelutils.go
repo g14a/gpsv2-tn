@@ -1,4 +1,4 @@
-package server
+package modelutils
 
 import (
 	"strconv"
@@ -7,8 +7,8 @@ import (
 	"gitlab.com/gpsv2-tn/models"
 )
 
-// ParseGTPLData parses the raw data sent
-// by the GTPL device and marshals into a GTPL device model
+// ParseGTPLDataSQL parses the GTPL Device sent
+// marshals into a GTPL device model for sending it to MySQL
 func ParseGTPLDataSQL(gtplDevice models.GTPLDevice) models.GTPLSQLModel {
 
 	var sqlDevice models.GTPLSQLModel
@@ -100,7 +100,7 @@ func ParseBSTPLDataSQL(bstplDevice models.BSTPLDevice) models.BSTPLSQLModel {
 	sqlDevice.Box = bstplDevice.BoxOpenCloseStatus
 	sqlDevice.GSM = strconv.Itoa(bstplDevice.GSMSignal)
 	sqlDevice.MainBatteryStatus = string(bstplDevice.MainBatteryStatus)
-	sqlDevice.IgnitionStatus = strconv.Itoa(bstplDevice.DigitalInputStatus)
+	sqlDevice.IgnitionStatus = strconv.FormatBool(bstplDevice.DigitalInputStatus)
 	sqlDevice.Analog = strconv.FormatFloat(bstplDevice.AnalogInput, 'E', -1, 32)
 	sqlDevice.InternalBatteryVoltage = 0
 	sqlDevice.CreateDate = time.Now()

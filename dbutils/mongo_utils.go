@@ -1,4 +1,6 @@
-package server
+// Packge dbutils has the required functions to update, insert and manipulate anything
+// related to the respected DB.
+package dbutils
 
 import (
 	"fmt"
@@ -22,10 +24,10 @@ var (
 	FenceDetailsCollection     = config.GetAppConfig().Mongoconfig.Collections.FenceDetailsCollection
 )
 
-// insertGTPLDataMongo inserts a GTPL device document
+// InsertGTPLDataMongo inserts a GTPL device document
 // into the live Mongo DB. It essentially updates the documents in a
 // seperate collection which contains the latest state of the device.
-func insertGTPLDataMongo(gtplDevice *models.GTPLDevice, startTime time.Time) {
+func InsertGTPLDataMongo(gtplDevice *models.GTPLDevice, startTime time.Time) {
 	if gtplDevice.DeviceID != "" {
 
 		// the live mongo db collection.
@@ -70,32 +72,47 @@ func insertGTPLDataMongo(gtplDevice *models.GTPLDevice, startTime time.Time) {
 
 			errorcheck.CheckError(err)
 
-			if getRunningStatus(gtplDevice.DeviceID) == false && gtplDevice.IgnitionStatus {
-				_, err := vehicleDetailsColl.UpdateOne(vctx, bson.M{"gps_device_id": gtplDevice.DeviceID},
-					bson.M{"$set": bson.M{
-						"isrunning": true,
-						"start_time": startTime,
-					}})
+			ignitionStatus := getRunningStatus(gtplDevice.DeviceID)
 
-				errorcheck.CheckError(err)
-			} else if getRunningStatus(gtplDevice.DeviceID) == true && gtplDevice.IgnitionStatus == false {
-				gtplDevice.StartTime = startTime
-				gtplDevice.EndTime = time.Now()
-				runTime := gtplDevice.EndTime.Unix() - gtplDevice.StartTime.Unix()
-				gtplDevice.RunTime = runTime
+			if ignitionStatus == false {
+				if gtplDevice.IgnitionStatus == true {
+
+					_, err := vehicleDetailsColl.UpdateOne(vctx, bson.M{"gps_device_id": gtplDevice.DeviceID},
+						bson.M{"$set": bson.M{
+							"isrunning": true,
+							"start_time": startTime,
+						}})
+
+					errorcheck.CheckError(err)
+				}
+			} else if getRunningStatus(gtplDevice.DeviceID) == true {
+				if gtplDevice.IgnitionStatus == false {
+
+					_, err := vehicleDetailsColl.UpdateOne(vctx, bson.M{"gps_device_id": gtplDevice.DeviceID},
+						bson.M{"$set": bson.M{
+							"isrunning": false,
+						}})
+
+					errorcheck.CheckError(err)
+
+					gtplDevice.StartTime = startTime
+					gtplDevice.EndTime = time.Now()
+					runTime := gtplDevice.EndTime.Unix() - gtplDevice.StartTime.Unix()
+					gtplDevice.RunTime = runTime
+				}
 			}
 		}
 
+		insertFencingGTPL(gtplDevice)
+
 		// Now insert in the live database. This doesn't have any conditions.
 		_, err := locationHistoriesColl.InsertOne(locCtx, gtplDevice)
-
-		insertFencingGTPL(gtplDevice)
 
 		errorcheck.CheckError(err)
 	}
 }
 
-func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device, startTime time.Time) {
+func InsertAIS140DataIntoMongo(ais140Device *models.AIS140Device, startTime time.Time) {
 	// the live mongo db collection.
 	var distance float64
 
@@ -135,29 +152,39 @@ func insertAIS140DataIntoMongo(ais140Device *models.AIS140Device, startTime time
 
 		errorcheck.CheckError(err)
 
-		if getRunningStatus(ais140Device.IMEINumber) == false && ais140Device.IgnitionStatus {
-			_, err := vehicleDetailsColl.UpdateOne(vctx, bson.M{"gps_device_id":ais140Device.IMEINumber},
-				bson.M{"$set": bson.M{
-					"isrunning": true,
-					"start_time": startTime,
-				}})
-			errorcheck.CheckError(err)
-		} else if getRunningStatus(ais140Device.IMEINumber) == true && ais140Device.IgnitionStatus {
-			ais140Device.StartTime = startTime
-			ais140Device.EndTime = time.Now()
-			runTime := ais140Device.EndTime.Unix() - startTime.Unix()
-			ais140Device.RunTime = runTime
+		ignitionStatus := getRunningStatus(ais140Device.IMEINumber)
+
+		if ignitionStatus == false {
+			if ais140Device.IgnitionStatus == true {
+
+				_, err := vehicleDetailsColl.UpdateOne(vctx, bson.M{"gps_device_id": ais140Device.IMEINumber},
+					bson.M{"$set": bson.M{
+						"start_time": startTime,
+					}})
+
+				errorcheck.CheckError(err)
+			}
+		} else if ignitionStatus == true {
+			if ais140Device.IgnitionStatus == false {
+
+				errorcheck.CheckError(err)
+
+				ais140Device.StartTime = startTime
+				ais140Device.EndTime = time.Now()
+				runTime := ais140Device.EndTime.Unix() - startTime.Unix()
+				ais140Device.RunTime = runTime
+			}
 		}
 	}
 
-	_, err := locationHistoriesColl.InsertOne(locCtx, ais140Device)
-
 	insertFencingAIS140(ais140Device)
+
+	_, err := locationHistoriesColl.InsertOne(locCtx, ais140Device)
 
 	errorcheck.CheckError(err)
 }
 
-func insertBSTPLDataMongo(bstplDevice *models.BSTPLDevice, startTime time.Time) {
+func InsertBSTPLDataMongo(bstplDevice *models.BSTPLDevice, startTime time.Time) {
 
 	var distance float64
 
@@ -200,25 +227,34 @@ func insertBSTPLDataMongo(bstplDevice *models.BSTPLDevice, startTime time.Time) 
 					}})
 
 			errorcheck.CheckError(err)
-			
-			if getRunningStatus(bstplDevice.VehicleID) == false && bstplDevice.DigitalInputStatus == 1 {
-				_, err := vehicleDetailsColl.UpdateOne(vctx, bson.M{"gps_device_id":bstplDevice.VehicleID},
-					bson.M{"$set": bson.M{
-							"isrunning": true,
+
+			ignitionStatus := getRunningStatus(bstplDevice.VehicleID)
+
+			if ignitionStatus == false {
+				if bstplDevice.DigitalInputStatus == true {
+
+					_, err := vehicleDetailsColl.UpdateOne(vctx, bson.M{"gps_device_id":bstplDevice.VehicleID},
+						bson.M{"$set": bson.M{
 							"start_time": startTime,
 						}})
-				errorcheck.CheckError(err)
-			} else if getRunningStatus(bstplDevice.VehicleID) == true && bstplDevice.DigitalInputStatus == 0 {
-				bstplDevice.StartTime = startTime
-				bstplDevice.EndTime = time.Now()
-				runTime := bstplDevice.EndTime.Unix() - startTime.Unix()
-				bstplDevice.RunTime = runTime
+					errorcheck.CheckError(err)
+				}
+			} else if ignitionStatus == true {
+				if bstplDevice.DigitalInputStatus == false {
+
+					errorcheck.CheckError(err)
+
+					bstplDevice.StartTime = startTime
+					bstplDevice.EndTime = time.Now()
+					runTime := bstplDevice.EndTime.Unix() - startTime.Unix()
+					bstplDevice.RunTime = runTime
+				}
 			}
 		}
 
-		_, err := locationHistoriesColl.InsertOne(locCtx, bstplDevice)
-
 		insertFencingBSTPL(bstplDevice)
+
+		_, err := locationHistoriesColl.InsertOne(locCtx, bstplDevice)
 
 		errorcheck.CheckError(err)
 	}
@@ -279,7 +315,7 @@ func GetPrevLatLong(deviceID string) (float64, float64, float64) {
 	return device.Latitude, device.Longitude, device.GPSOdometer
 }
 
-func insertRawDataMongo(rawData string) {
+func InsertRawDataMongo(rawData string) {
 
 	rawDataCollection, rctx := db.GetRawCollectionWithContext()
 
@@ -323,7 +359,6 @@ func insertFencingBSTPL(bstplDevice *models.BSTPLDevice) {
 			if utils.GeoFence(deviceFence.Latitude, deviceFence.Longitude, deviceLat, deviceLong, float64(deviceFence.Radius)) {
 				bstplDevice.GeoFenceID = 33 // to Base
 			}
-
 		}
 	}
 }
@@ -388,7 +423,7 @@ func insertFencingAIS140(ais140Device *models.AIS140Device) {
 			for cursor.Next(ctx) {
 				err = cursor.Decode(&deviceFence)
 
-				if err != nil  {
+				if err != nil {
 					log.Println(err)
 				}
 			}
@@ -399,7 +434,7 @@ func insertFencingAIS140(ais140Device *models.AIS140Device) {
 
 			// if it is true, meaning the device reached the fence
 			if utils.GeoFence(deviceFence.Latitude, deviceFence.Longitude, deviceLat, deviceLong, float64(deviceFence.Radius)) {
-				ais140Device.GeoFenceID = 33			// to Base
+				ais140Device.GeoFenceID = 33 // to Base
 			}
 		}
 	}
@@ -412,8 +447,8 @@ func getRunningStatus(deviceID string) bool {
 	//get previous ignition state "isrunning"
 	singleResult := vehicleDetailsColl.FindOne(ctx, bson.M{"gps_device_id": deviceID}, &options.FindOneOptions{
 		Projection: bson.D{
-			{"device_time", 1},
-			{"isrunning", 1},
+			{"ignition_status", 1},
+			{"start_time", 1},
 		},
 	})
 
@@ -423,7 +458,7 @@ func getRunningStatus(deviceID string) bool {
 		singleResult.Decode(&device)
 	}
 
-	return device.IsRunning
+	return device.IgnitionStatus
 }
 
 type deviceFence struct {
@@ -440,8 +475,7 @@ type latlong struct {
 }
 
 type Dt struct {
-	DeviceTime time.Time `bson:"device_time"`
-	IsRunning  bool 	 `bson:"isrunning"`
+	IgnitionStatus bool  `bson:"ignition_status"`
 }
 
 type Device struct {

@@ -19,7 +19,7 @@ type BSTPLDevice struct {
 	BoxOpenCloseStatus 			string			`bson:"box_status"`
 	GSMSignal 					int				`bson:"gsm_signal_strength"`
 	MainBatteryStatus 			int				`bson:"main_bt_status"`
-	DigitalInputStatus 			int				`bson:"ignition_status"`	//Ignition status
+	DigitalInputStatus 			bool				`bson:"ignition_status"`	//Ignition status
 	AnalogInput 				float64
 	GPSAccuracy 				int
 	InternalBatteryVoltage		float64			`bson:"internal_bt_voltage"`

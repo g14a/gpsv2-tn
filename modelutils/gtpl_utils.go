@@ -1,7 +1,8 @@
-package server
+package modelutils
 
 import (
 	"encoding/csv"
+	"gitlab.com/gpsv2-tn/config"
 	"gitlab.com/gpsv2-tn/errorcheck"
 	"gitlab.com/gpsv2-tn/models"
 	"gitlab.com/gpsv2-tn/utils"
@@ -11,7 +12,7 @@ import (
 )
 
 // ParseGTPLData parses the raw data sent
-// by the GTPL device and marshals into a GTPL device model
+// by the GTPL device and marshals into a GTPL device model and returns the model
 func ParseGTPLData(rawData string) models.GTPLDevice {
 
 	r := csv.NewReader(strings.NewReader(rawData))
@@ -62,7 +63,7 @@ func ParseGTPLData(rawData string) models.GTPLDevice {
 				gtplDevice.ButtonCode = 99
 			}
 
-			gtplDevice.Port = 7788
+			gtplDevice.Port, _ = strconv.Atoi(config.GetAppConfig().TCPSocketConfig.Port)
 		}
 	}
 

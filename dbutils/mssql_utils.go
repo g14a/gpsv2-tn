@@ -1,4 +1,4 @@
-package server
+package dbutils
 
 import (
 	"bytes"
@@ -25,11 +25,13 @@ var (
 	}
 )
 
+// ParseMSSQLDeviceFromGTPL parses the GTPL device model into a model which is
+// accepted by MSSQL queries.
 func ParseMSSQLDeviceFromGTPL(device models.GTPLDevice) models.MSSQLDevice {
 	var mssqlDevice models.MSSQLDevice
 
-	mssqlDevice.SentTime = device.CreatedTime
-	mssqlDevice.RecvTime = time.Now()
+	mssqlDevice.RecvTime = device.CreatedTime
+	mssqlDevice.SentTime = time.Now()
 
 	vehicleNumber := getVehicleRegNo(device.DeviceID)
 
@@ -54,13 +56,15 @@ func ParseMSSQLDeviceFromGTPL(device models.GTPLDevice) models.MSSQLDevice {
 	return mssqlDevice
 }
 
+// ParseMSSQLDeviceFromAIS140 parses the AIS140 device model into a model which is
+// accepted by MSSQL queries.
 func ParseMSSQLDeviceFromAIS140(device models.AIS140Device) models.MSSQLDevice {
 	var mssqlDevice models.MSSQLDevice
 
 	vehicleNumber := getVehicleRegNo(device.IMEINumber)
 
-	mssqlDevice.SentTime = device.CreatedTime
-	mssqlDevice.RecvTime = time.Now()
+	mssqlDevice.RecvTime = device.CreatedTime
+	mssqlDevice.SentTime = time.Now()
 
 	mssqlDevice.ButtonCode = strconv.Itoa(int(device.ButtonCode))
 	mssqlDevice.Geofence = device.GeoFenceID
@@ -79,17 +83,19 @@ func ParseMSSQLDeviceFromAIS140(device models.AIS140Device) models.MSSQLDevice {
 
 	mssqlDevice.Orientation = device.Heading
 	mssqlDevice.SimID = device.IMEINumber
-	mssqlDevice.Geofence = 0
 
 	return mssqlDevice
 }
 
+
+// ParseMSSQLDeviceFromBSTPL parses the BSTPL device model into a model which is
+// accepted by MSSQL queries.
 func ParseMSSQLDeviceFromBSTPL(device models.BSTPLDevice) models.MSSQLDevice {
 
 	var mssqlDevice models.MSSQLDevice
 
-	mssqlDevice.SentTime = device.CreatedTime
-	mssqlDevice.RecvTime = time.Now()
+	mssqlDevice.RecvTime = device.CreatedTime
+	mssqlDevice.SentTime = time.Now()
 
 	mssqlDevice.LiveHistory = device.LiveOrHistoryPacket
 
@@ -104,7 +110,7 @@ func ParseMSSQLDeviceFromBSTPL(device models.BSTPLDevice) models.MSSQLDevice {
 	mssqlDevice.Speed = device.Speed
 	mssqlDevice.Ignition = true
 
-	if device.DigitalInputStatus == 1 {
+	if device.DigitalInputStatus {
 		mssqlDevice.Ignition = false
 	}
 
@@ -120,6 +126,10 @@ func ParseMSSQLDeviceFromBSTPL(device models.BSTPLDevice) models.MSSQLDevice {
 	return mssqlDevice
 }
 
+
+// InsertIntoMSSQL inserts the MSSQL model created from the above functions and performs
+// a HTTP call to the endpoint posting the query as the body of the request. There are two insert queries
+// and one update query. The query is formed using Sprintf and marshalled into JSON, then passed into the body.
 func InsertIntoMSSQL(device models.MSSQLDevice) {
 
 	if device.LiveHistory == "L" {
@@ -148,10 +158,10 @@ func InsertIntoMSSQL(device models.MSSQLDevice) {
 			device.Fuel, ignition, device.BatteryStatus, device.ButtonCode, device.VehicleNumber,
 			device.InternalBattery, device.Geofence)
 
-		uq := fmt.Sprintf("UPDATE T_LatestData SET SIM_ID='%s',Sent_Time='%v',Rec_Time='%v',Latitude='%f',Longitude='%f',Speed=%f,Orientation='%d',OdoRead='%d',OdoDecimal='%f',Fuel=%d,Ignition=%d,Button_Code=%s,Battery_Status=%s where vehiclenumber='%s'",
+		uq := fmt.Sprintf("UPDATE T_LatestData SET SIM_ID='%s',Sent_Time='%v',Rec_Time='%v',Latitude='%f',Longitude='%f',Speed=%f,Orientation='%d',OdoRead='%d',OdoDecimal='%f',Fuel=%d,Ignition=%d,Button_Code=%s,Battery_Status=%s,Geofence=%v,Internal_battery=%d where vehiclenumber='%s'",
 			device.SimID, sentTime, recvTime, device.Latitude, device.Longitude, device.Speed,
 			device.Orientation, device.OdometerReading, device.OdoDecimal, device.Fuel,
-			ignition, device.ButtonCode, device.BatteryStatus, device.VehicleNumber)
+			ignition, device.ButtonCode, device.BatteryStatus,device.Geofence,device.InternalBattery, device.VehicleNumber)
 
 		insertQuery1 := &Query{
 			Query: iq1,

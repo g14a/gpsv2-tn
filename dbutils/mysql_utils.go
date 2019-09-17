@@ -1,6 +1,6 @@
-	package server
+package dbutils
 
-	import (
+import (
 		"bytes"
 		"encoding/json"
 		"fmt"
@@ -9,7 +9,7 @@
 		"net/http"
 	)
 
-func insertGTPLIntoSQL(sqlDevice models.GTPLSQLModel) {
+func InsertGTPLIntoSQL(sqlDevice models.GTPLSQLModel) {
 
 	fixTime := sqlDevice.Fixtime.Format("2006-01-02 15:04:05")
 	recvTime := sqlDevice.CreateDate.Format("2006-01-02 15:04:05")
@@ -58,7 +58,7 @@ func insertGTPLIntoSQL(sqlDevice models.GTPLSQLModel) {
 	upreq.Close = true
 }
 
-func insertAIS140IntoSQL(sqlDevice models.AIS140SQLModel) {
+func InsertAIS140IntoSQL(sqlDevice models.AIS140SQLModel) {
 	fixTime := sqlDevice.FixTime.Format("2006-01-02 15:04:05")
 	recvTime := sqlDevice.CreateDate.Format("2006-01-02 15:04:05")
 
@@ -116,7 +116,7 @@ func insertAIS140IntoSQL(sqlDevice models.AIS140SQLModel) {
 	upreq.Close = true
 }
 
-func insertBSTPLIntoSQL(sqlDevice models.BSTPLSQLModel) {
+func InsertBSTPLIntoSQL(sqlDevice models.BSTPLSQLModel) {
 
 	fixTime := sqlDevice.Fixtime.Format("2006-01-02 15:04:05")
 	recvTime := sqlDevice.CreateDate.Format("2006-01-02 15:04:05")
