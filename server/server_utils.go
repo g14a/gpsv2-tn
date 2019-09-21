@@ -1,9 +1,8 @@
 package server
 
 import (
-	"fmt"
 	"gitlab.com/gpsv2-tn/dbutils"
-	"gitlab.com/gpsv2-tn/models"
+	"gitlab.com/gpsv2-tn/errorcheck"
 	"gitlab.com/gpsv2-tn/modelutils"
 	"io"
 	"net"
@@ -17,18 +16,17 @@ func HandleConnection(conn net.Conn) {
 
 	startTime := time.Now()
 
+	// Initialize a buffer of 1KB to be read from the client and read using conn.Read
+	buf := make([]byte, 1024)
+
 	for {
-		// Initialize a buffer of 5KB to be read from the client and read using conn.Read
-		buf := make([]byte, 2*1024)
 		_, err := conn.Read(buf)
 
 		// if an error occurs deal with it
 		if err != nil {
-			fmt.Println(err.Error())
 			if err == io.EOF {
-				fmt.Println("Connection closed EOF")
+				errorcheck.CheckError(err)
 				_ = conn.Close()
-				count--
 				return
 			}
 		} else {
@@ -40,7 +38,6 @@ func HandleConnection(conn net.Conn) {
 				for _, record := range dataslice {
 					processBSTPLDevices(record, startTime)
 				}
-
 				dataslice = nil
 
 			} else if strings.Contains(buffer, "GTPL") {
@@ -67,84 +64,55 @@ func HandleConnection(conn net.Conn) {
 
 func processGTPLDevices(record string, startTime time.Time) {
 
-	var (
-		gtplDevice  models.GTPLDevice
-		mysqlDevice models.GTPLSQLModel
-		mssqlDevice models.MSSQLDevice
-	)
-
-	gtplDevice = modelutils.ParseGTPLData(record)
+	gtplDevice := modelutils.ParseGTPLData(record)
 
 	// ignores if an empty data occurs
 	if gtplDevice.Latitude != 0 && gtplDevice.Longitude != 0 && gtplDevice.DeviceID != "" {
 
-		fmt.Println(gtplDevice)
+		mssqlDevice := dbutils.ParseMSSQLDeviceFromGTPL(gtplDevice)
 
-		mssqlDevice = dbutils.ParseMSSQLDeviceFromGTPL(gtplDevice)
+		go dbutils.InsertIntoMSSQL(mssqlDevice)
+		go dbutils.InsertGTPLDataMongo(&gtplDevice, startTime)
 
-		gtplDevice.Distance = mysqlDevice.DistanceTravelled
-
-		dbutils.InsertIntoMSSQL(mssqlDevice)
-		dbutils.InsertGTPLDataMongo(&gtplDevice, startTime)
-		mysqlDevice = modelutils.ParseGTPLDataSQL(gtplDevice)
+		mysqlDevice := modelutils.ParseGTPLDataSQL(gtplDevice)
 
 		dbutils.InsertGTPLIntoSQL(mysqlDevice)
-		dbutils.InsertRawDataMongo(record)
 	}
 }
 
 func processBSTPLDevices(record string, startTime time.Time) {
 
-	var (
-		bstplDevice models.BSTPLDevice
-		mssqlDevice models.MSSQLDevice
-		mysqlDevice models.BSTPLSQLModel
-	)
-
-	bstplDevice = modelutils.ParseBSTPLData(record)
+	bstplDevice := modelutils.ParseBSTPLData(record)
 
 	if bstplDevice.Latitude != 0 && bstplDevice.Longitude != 0 && bstplDevice.VehicleID != "" {
 
-		fmt.Println(bstplDevice)
-
 		recvTime := time.Now()
 
-		dbutils.InsertBSTPLDataMongo(&bstplDevice, startTime)
-		mssqlDevice = dbutils.ParseMSSQLDeviceFromBSTPL(bstplDevice)
+		go dbutils.InsertBSTPLDataMongo(&bstplDevice, startTime)
+
+		mssqlDevice := dbutils.ParseMSSQLDeviceFromBSTPL(bstplDevice)
 		mssqlDevice.RecvTime = recvTime
 
-		dbutils.InsertIntoMSSQL(mssqlDevice)
-		mysqlDevice = modelutils.ParseBSTPLDataSQL(bstplDevice)
+		go dbutils.InsertIntoMSSQL(mssqlDevice)
+		mysqlDevice := modelutils.ParseBSTPLDataSQL(bstplDevice)
 
 		dbutils.InsertBSTPLIntoSQL(mysqlDevice)
-		dbutils.InsertRawDataMongo(record)
-
 	}
-
 }
 
 func processAIS140Device(record string, startTime time.Time) {
 
-	var (
-		ais140Device  models.AIS140Device
-		mysqlDevice models.AIS140SQLModel
-		mssqlDevice models.MSSQLDevice
-	)
-
-	ais140Device = modelutils.ParseAIS140Data(record)
+	ais140Device := modelutils.ParseAIS140Data(record)
 
 	// ignores if an empty data occurs
 	if ais140Device.Latitude != 0 && ais140Device.Longitude != 0 && ais140Device.IMEINumber != "" {
 
-		fmt.Println(ais140Device)
+		mssqlDevice := dbutils.ParseMSSQLDeviceFromAIS140(ais140Device)
 
-		mssqlDevice = dbutils.ParseMSSQLDeviceFromAIS140(ais140Device)
+		go dbutils.InsertIntoMSSQL(mssqlDevice)
+		go dbutils.InsertAIS140DataIntoMongo(&ais140Device, startTime)
 
-		dbutils.InsertIntoMSSQL(mssqlDevice)
-		dbutils.InsertAIS140DataIntoMongo(&ais140Device, startTime)
-
-		mysqlDevice = modelutils.ParseAIS140DataSQL(ais140Device)
+		mysqlDevice := modelutils.ParseAIS140DataSQL(ais140Device)
 		dbutils.InsertAIS140IntoSQL(mysqlDevice)
-		dbutils.InsertRawDataMongo(record)
 	}
 }

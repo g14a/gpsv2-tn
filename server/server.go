@@ -5,12 +5,6 @@ import (
 	"gitlab.com/gpsv2-tn/errorcheck"
 	"log"
 	"net"
-	"sync"
-)
-
-var (
-	count = 0
-	countMutex sync.Mutex
 )
 
 // StartServer starts listening to the server via TCP protocol
@@ -29,10 +23,6 @@ func StartServer() {
 
 	for {
 		conn, err := ln.Accept()
-
-		countMutex.Lock()
-		count++
-		countMutex.Unlock()
 
 		if err != nil {
 			log.Println(err)

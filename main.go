@@ -1,21 +1,13 @@
 package main
 
 import (
+	"github.com/pkg/profile"
 	"gitlab.com/gpsv2-tn/server"
-	"runtime/debug"
-	"time"
 )
 
 // main starts the server
 func main() {
+	defer profile.Start(profile.MemProfile).Stop()
+
 	server.StartServer()
-
-	go periodicFreeMemory(1 * time.Minute)
-}
-
-func periodicFreeMemory(d time.Duration) {
-	tick := time.Tick(d)
-	for _ = range tick {
-		debug.FreeOSMemory()
-	}
 }

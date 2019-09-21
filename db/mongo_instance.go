@@ -34,7 +34,7 @@ func GetMongoCollectionWithContext(collectionName string) (*mongo.Collection, co
 	mongoClient = getMongoClient()
 	collection := mongoClient.Database(liveDB).Collection(collectionName)
 
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 20*time.Second)
 
 	return collection, ctx
 }
@@ -43,7 +43,7 @@ func GetRawCollectionWithContext() (*mongo.Collection, context.Context) {
 	mongoClient = getMongoClient()
 	collection := mongoClient.Database(rawDB).Collection("raw_data")
 
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 20*time.Second)
 
 	return collection, ctx
 }
@@ -53,7 +53,22 @@ func GetRawCollectionWithContext() (*mongo.Collection, context.Context) {
 func connectLiveDB() {
 	appConfigInstance := config.GetAppConfig()
 
-	mClient, err := mongo.NewClient(options.Client().ApplyURI(appConfigInstance.Mongoconfig.URL))
+	//mClient , err := mongo.NewClient(options.Client().ApplyURI(appConfigInstance.Mongoconfig.URL))
+
+	clientOptions := options.ClientOptions{
+		Auth: &options.Credential{
+			AuthMechanism: "SCRAM-SHA-1",
+			AuthMechanismProperties: nil,
+			AuthSource:              "tamilnaduDB",
+			Username:                "tamilnadugvk",
+			Password:                "avancergvk",
+			PasswordSet:             true,
+		},
+	}
+
+	clientOptions.ApplyURI(appConfigInstance.Mongoconfig.URL)
+
+	mClient, err := mongo.NewClient(&clientOptions)
 
 	err = mClient.Connect(context.TODO())
 	errorcheck.CheckError(err)
